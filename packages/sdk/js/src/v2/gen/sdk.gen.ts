@@ -39,10 +39,20 @@ import type {
   GithubKeysDeleteErrors,
   GithubKeysDeleteResponses,
   GithubKeysListResponses,
+  GithubPullRequestsCreateErrors,
+  GithubPullRequestsCreateResponses,
+  GithubPullRequestsGetErrors,
+  GithubPullRequestsGetResponses,
+  GithubPushErrors,
+  GithubPushResponses,
+  GithubRemoteInfoErrors,
+  GithubRemoteInfoResponses,
   GithubReposBranchesErrors,
   GithubReposBranchesResponses,
   GithubReposListErrors,
   GithubReposListResponses,
+  GithubStatusErrors,
+  GithubStatusResponses,
   GlobalDisposeResponses,
   GlobalEventResponses,
   GlobalHealthResponses,
@@ -2232,6 +2242,101 @@ export class Repos extends HeyApiClient {
   }
 }
 
+export class PullRequests extends HeyApiClient {
+  /**
+   * Get pull request
+   *
+   * Get pull request for a branch.
+   */
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory: string
+      keyID: string
+      headBranch?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "keyID" },
+            { in: "query", key: "headBranch" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      GithubPullRequestsGetResponses,
+      GithubPullRequestsGetErrors,
+      ThrowOnError
+    >({
+      url: "/github/pull-requests",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Create pull request
+   *
+   * Create a pull request on GitHub.
+   */
+  public create<ThrowOnError extends boolean = false>(
+    parameters?: {
+      query_directory?: string
+      keyID?: string
+      body_directory?: string
+      title?: string
+      body?: string
+      baseBranch?: string
+      headBranch?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            {
+              in: "query",
+              key: "query_directory",
+              map: "directory",
+            },
+            { in: "body", key: "keyID" },
+            {
+              in: "body",
+              key: "body_directory",
+              map: "directory",
+            },
+            { in: "body", key: "title" },
+            { in: "body", key: "body" },
+            { in: "body", key: "baseBranch" },
+            { in: "body", key: "headBranch" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      GithubPullRequestsCreateResponses,
+      GithubPullRequestsCreateErrors,
+      ThrowOnError
+    >({
+      url: "/github/pull-requests",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
 export class Github extends HeyApiClient {
   /**
    * Clone repository
@@ -2274,6 +2379,93 @@ export class Github extends HeyApiClient {
     })
   }
 
+  /**
+   * Get remote info
+   *
+   * Get remote URL information for a directory.
+   */
+  public remoteInfo<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "directory" }] }])
+    return (options?.client ?? this.client).get<GithubRemoteInfoResponses, GithubRemoteInfoErrors, ThrowOnError>({
+      url: "/github/remote-info",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get git status
+   *
+   * Get current branch and uncommitted changes count.
+   */
+  public status<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "directory" }] }])
+    return (options?.client ?? this.client).get<GithubStatusResponses, GithubStatusErrors, ThrowOnError>({
+      url: "/github/status",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Push changes
+   *
+   * Commit and push changes to GitHub using stored token.
+   */
+  public push<ThrowOnError extends boolean = false>(
+    parameters?: {
+      query_directory?: string
+      keyID?: string
+      body_directory?: string
+      message?: string
+      branchName?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            {
+              in: "query",
+              key: "query_directory",
+              map: "directory",
+            },
+            { in: "body", key: "keyID" },
+            {
+              in: "body",
+              key: "body_directory",
+              map: "directory",
+            },
+            { in: "body", key: "message" },
+            { in: "body", key: "branchName" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<GithubPushResponses, GithubPushErrors, ThrowOnError>({
+      url: "/github/push",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
   private _keys?: Keys
   get keys(): Keys {
     return (this._keys ??= new Keys({ client: this.client }))
@@ -2282,6 +2474,11 @@ export class Github extends HeyApiClient {
   private _repos?: Repos
   get repos(): Repos {
     return (this._repos ??= new Repos({ client: this.client }))
+  }
+
+  private _pullRequests?: PullRequests
+  get pullRequests(): PullRequests {
+    return (this._pullRequests ??= new PullRequests({ client: this.client }))
   }
 }
 

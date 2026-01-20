@@ -689,40 +689,31 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
         query: "",
     })
 
-    async function loadRepos(reset = false) {
-        if (reset) {
-            setStore({ repos: [], page: 1, hasMore: true })
-        }
-
-        if (!store.hasMore) return
-
-        setStore(reset ? "loading" : "loadingMore", true)
-        setStore("error", undefined)
+    async function fetchRepos(query: string): Promise<RepoListItem[]> {
+        const backItem: BackItem = { id: "__back__", name: language.t("dialog.directory.back"), type: "back" }
 
         try {
             // @ts-ignore - SDK will be regenerated
             const response = await globalSDK.client.github.repos.list({
                 keyID: props.keyID,
-                query: store.query || undefined,
-                page: store.page,
+                query: query || undefined,
+                page: 1,
                 perPage: 30,
             })
 
-            const repos = (response.data as Array<Repo>) ?? []
-            setStore("repos", (prev) => (reset ? repos : [...prev, ...repos]))
-            setStore("hasMore", repos.length === 30)
-            setStore("page", (prev) => prev + 1)
+            const repos = ((response.data as Array<Repo>) ?? []).map((r) => ({
+                ...r,
+                type: "repo" as const,
+            }))
+
+            setStore("repos", repos)
+            setStore("error", undefined)
+            return [backItem, ...repos]
         } catch (e) {
             setStore("error", String(e))
-        } finally {
-            setStore("loading", false)
-            setStore("loadingMore", false)
+            return [backItem]
         }
     }
-
-    onMount(() => {
-        loadRepos(true)
-    })
 
     function handleSelectRepo(repo: Repo) {
         dialog.show(() => (
@@ -778,12 +769,6 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
         }
     }
 
-    const computedItems = createMemo<RepoListItem[]>(() => {
-        const repos: RepoListItem[] = store.repos.map((r) => ({ ...r, type: "repo" as const }))
-        const backItem: BackItem = { id: "__back__", name: language.t("dialog.directory.back"), type: "back" }
-        return [backItem, ...repos]
-    })
-
     return (
         <Dialog
             title={language.t("dialog.project.select_repo.title")}
@@ -792,7 +777,7 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
             <List
                 search={{ placeholder: language.t("dialog.project.select_repo.search.placeholder"), autofocus: true }}
                 emptyMessage={language.t("dialog.project.select_repo.empty")}
-                items={computedItems}
+                items={fetchRepos}
                 key={(x) => (typeof x.id === "number" ? x.id.toString() : x.id)}
                 onSelect={(item) => {
                     if (!item) return
@@ -931,12 +916,16 @@ function DialogSelectGithubBranch(props: {
         branches: [] as Branch[],
         loading: true,
         error: undefined as string | undefined,
-        query: "",
     })
 
-    async function loadBranches() {
-        setStore("loading", true)
-        setStore("error", undefined)
+    async function fetchBranches(query: string): Promise<BranchListItem[]> {
+        const backItem: BackItem = { id: "__back__", name: language.t("dialog.project.select_branch.back"), type: "back" }
+        const defaultItem: DefaultBranchItem = {
+            id: "__default__",
+            name: language.t("dialog.project.select_branch.default", { branch: props.defaultBranch }),
+            type: "default",
+            defaultBranch: props.defaultBranch,
+        }
 
         try {
             // @ts-ignore - SDK will be regenerated
@@ -944,21 +933,21 @@ function DialogSelectGithubBranch(props: {
                 keyID: props.keyID,
                 owner: props.owner,
                 repo: props.repo,
-                query: store.query || undefined,
+                query: query || undefined,
                 perPage: 50,
             })
 
-            setStore("branches", response.data ?? [])
+            const branches = (response.data ?? []) as Branch[]
+            setStore("branches", branches)
+            setStore("error", undefined)
+            setStore("loading", false)
+            return [backItem, defaultItem, ...branches]
         } catch (e) {
             setStore("error", String(e))
-        } finally {
             setStore("loading", false)
+            return [backItem, defaultItem]
         }
     }
-
-    onMount(() => {
-        loadBranches()
-    })
 
     function handleSelectBranch(branch: Branch) {
         props.onSelect(branch.name === props.defaultBranch ? undefined : branch.name)
@@ -973,22 +962,6 @@ function DialogSelectGithubBranch(props: {
             <DialogSelectGithubRepo keyID={props.keyID} keyName={props.keyName} onSelect={props.onSelect} />
         ))
     }
-
-    const items = createMemo<BranchListItem[]>(() => {
-        let branches = store.branches
-        if (store.query) {
-            const q = store.query.toLowerCase()
-            branches = branches.filter((b) => b.name.toLowerCase().includes(q))
-        }
-        const backItem: BackItem = { id: "__back__", name: language.t("dialog.project.select_branch.back"), type: "back" }
-        const defaultItem: DefaultBranchItem = {
-            id: "__default__",
-            name: language.t("dialog.project.select_branch.default", { branch: props.defaultBranch }),
-            type: "default",
-            defaultBranch: props.defaultBranch,
-        }
-        return [backItem, defaultItem, ...branches]
-    })
 
     return (
         <Dialog
@@ -1011,7 +984,7 @@ function DialogSelectGithubBranch(props: {
             <List
                 search={{ placeholder: language.t("dialog.project.select_branch.search.placeholder"), autofocus: true }}
                 emptyMessage={language.t("dialog.project.select_branch.empty")}
-                items={items}
+                items={fetchBranches}
                 key={(x) => x.id ?? x.name}
                 onSelect={(item) => {
                     if (!item) return

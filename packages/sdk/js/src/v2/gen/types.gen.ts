@@ -4196,6 +4196,178 @@ export type GithubCloneResponses = {
 
 export type GithubCloneResponse = GithubCloneResponses[keyof GithubCloneResponses]
 
+export type GithubRemoteInfoData = {
+  body?: never
+  path?: never
+  query: {
+    directory: string
+  }
+  url: "/github/remote-info"
+}
+
+export type GithubRemoteInfoErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubRemoteInfoError = GithubRemoteInfoErrors[keyof GithubRemoteInfoErrors]
+
+export type GithubRemoteInfoResponses = {
+  /**
+   * Remote info
+   */
+  200: {
+    url: string
+    owner: string
+    repo: string
+    isHttps: boolean
+  }
+}
+
+export type GithubRemoteInfoResponse = GithubRemoteInfoResponses[keyof GithubRemoteInfoResponses]
+
+export type GithubStatusData = {
+  body?: never
+  path?: never
+  query: {
+    directory: string
+  }
+  url: "/github/status"
+}
+
+export type GithubStatusErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubStatusError = GithubStatusErrors[keyof GithubStatusErrors]
+
+export type GithubStatusResponses = {
+  /**
+   * Git status
+   */
+  200: {
+    branch?: string
+    changesCount: number
+    isClean: boolean
+  }
+}
+
+export type GithubStatusResponse = GithubStatusResponses[keyof GithubStatusResponses]
+
+export type GithubPushData = {
+  body?: {
+    keyID: string
+    directory: string
+    message?: string
+    branchName?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/push"
+}
+
+export type GithubPushErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubPushError = GithubPushErrors[keyof GithubPushErrors]
+
+export type GithubPushResponses = {
+  /**
+   * Push result
+   */
+  200: {
+    branch: string
+    sha: string
+    success: boolean
+  }
+}
+
+export type GithubPushResponse = GithubPushResponses[keyof GithubPushResponses]
+
+export type GithubPullRequestsGetData = {
+  body?: never
+  path?: never
+  query: {
+    directory: string
+    keyID: string
+    headBranch?: string
+  }
+  url: "/github/pull-requests"
+}
+
+export type GithubPullRequestsGetErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubPullRequestsGetError = GithubPullRequestsGetErrors[keyof GithubPullRequestsGetErrors]
+
+export type GithubPullRequestsGetResponses = {
+  /**
+   * PR info
+   */
+  200: {
+    number: number
+    url: string
+    title: string
+    state: "open" | "closed"
+  }
+}
+
+export type GithubPullRequestsGetResponse = GithubPullRequestsGetResponses[keyof GithubPullRequestsGetResponses]
+
+export type GithubPullRequestsCreateData = {
+  body?: {
+    keyID: string
+    directory: string
+    title: string
+    body?: string
+    baseBranch: string
+    headBranch?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/pull-requests"
+}
+
+export type GithubPullRequestsCreateErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubPullRequestsCreateError = GithubPullRequestsCreateErrors[keyof GithubPullRequestsCreateErrors]
+
+export type GithubPullRequestsCreateResponses = {
+  /**
+   * PR created
+   */
+  200: {
+    number: number
+    url: string
+    title: string
+  }
+}
+
+export type GithubPullRequestsCreateResponse =
+  GithubPullRequestsCreateResponses[keyof GithubPullRequestsCreateResponses]
+
 export type FindTextData = {
   body?: never
   path?: never
