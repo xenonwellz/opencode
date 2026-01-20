@@ -12,7 +12,7 @@ import { DialogSelectServer } from "@/components/dialog-select-server"
 import { useServer } from "@/context/server"
 import { useGlobalSync } from "@/context/global-sync"
 import { useLanguage } from "@/context/language"
-import { DialogSelectProjectProvider } from "@/components/dialog-select-project-provider"
+import { DialogSelectProjectProvider } from "@/components/dialog-select-project"
 
 export default function Home() {
   const sync = useGlobalSync()
