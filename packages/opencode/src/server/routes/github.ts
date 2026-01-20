@@ -4,6 +4,7 @@ import z from "zod"
 import { GithubKey } from "../../github/keys"
 import { Global } from "../../global"
 import path from "path"
+import fs from "fs/promises"
 import { $ } from "bun"
 import { Log } from "../../util/log"
 import { lazy } from "../../util/lazy"
@@ -303,13 +304,13 @@ export const GithubRoutes = lazy(() => {
         const targetDir = path.join(workspaceDir, folderName)
 
         try {
-          await Bun.write(targetDir, "")
+          await fs.mkdir(targetDir, { recursive: true })
 
           const repoUrl = `https://x-access-token:${key.token}@github.com/${owner}/${repo}.git`
-          const cloneArgs: string[] = ["git", "clone", "--bare", repoUrl, targetDir]
+          const cloneArgs: string[] = ["git", "clone", "--depth", "1", repoUrl, targetDir]
 
           if (branch) {
-            cloneArgs.push("--branch", branch, "--single-branch")
+            cloneArgs.push("--branch", branch)
           }
 
           const cloneProcess = Bun.spawn({
@@ -319,6 +320,12 @@ export const GithubRoutes = lazy(() => {
             stdout: "pipe",
           })
           await cloneProcess.exited
+
+          if (cloneProcess.exitCode !== 0) {
+            const stderr = await new Response(cloneProcess.stderr).text()
+            log.error("Git clone failed", { stderr, exitCode: cloneProcess.exitCode })
+            return c.json({ error: "Failed to clone repository" }, { status: 400 })
+          }
 
           return c.json({ path: targetDir })
         } catch (error) {
