@@ -365,7 +365,7 @@ export const dict = {
 
   "home.recentProjects": "最近專案",
   "home.empty.title": "沒有最近專案",
-  "home.empty.description": "透過開啟本地專案開始使用",
+  "home.empty.description": "開啟本地專案或連接支持的服務商以開始使用",
 
   "session.tab.session": "工作階段",
   "session.tab.review": "審查",

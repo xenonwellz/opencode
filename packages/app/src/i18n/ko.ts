@@ -374,7 +374,7 @@ export const dict = {
 
   "home.recentProjects": "최근 프로젝트",
   "home.empty.title": "최근 프로젝트 없음",
-  "home.empty.description": "로컬 프로젝트를 열어 시작하세요",
+  "home.empty.description": "로컬 프로젝트를 열거나 지원되는 공급자를 연결하여 시작하세요",
 
   "session.tab.session": "세션",
   "session.tab.review": "검토",

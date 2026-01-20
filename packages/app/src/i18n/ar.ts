@@ -389,7 +389,7 @@ export const dict = {
 
   "home.recentProjects": "المشاريع الحديثة",
   "home.empty.title": "لا توجد مشاريع حديثة",
-  "home.empty.description": "ابدأ بفتح مشروع محلي",
+  "home.empty.description": "افتح مشروعًا محليًا أو قم بتوصيل مزود مدعوم للبدء",
 
   "session.tab.session": "جلسة",
   "session.tab.review": "مراجعة",

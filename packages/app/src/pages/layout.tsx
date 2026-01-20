@@ -59,6 +59,7 @@ import { playSound, soundSrc } from "@/utils/sound"
 
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { useTheme, type ColorScheme } from "@opencode-ai/ui/theme"
+import { DialogSelectProjectProvider } from "@/components/dialog-select-project-provider"
 import { DialogSelectProvider } from "@/components/dialog-select-provider"
 import { DialogSelectServer } from "@/components/dialog-select-server"
 import { DialogSettings } from "@/components/dialog-settings"
@@ -1068,7 +1069,7 @@ export default function Layout(props: ParentProps) {
       resolve(result)
     } else {
       dialog.show(
-        () => <DialogSelectDirectory multiple={true} onSelect={resolve} />,
+        () => <DialogSelectProjectProvider multiple={true} onSelect={resolve} />,
         () => resolve(null),
       )
     }

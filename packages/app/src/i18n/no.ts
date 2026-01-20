@@ -393,7 +393,7 @@ export const dict = {
 
   "home.recentProjects": "Nylige prosjekter",
   "home.empty.title": "Ingen nylige prosjekter",
-  "home.empty.description": "Kom i gang ved å åpne et lokalt prosjekt",
+  "home.empty.description": "Åpne et lokalt prosjekt eller koble til en støttet leverandør for å komme i gang",
 
   "session.tab.session": "Sesjon",
   "session.tab.review": "Gjennomgang",

@@ -395,7 +395,7 @@ export const dict = {
 
   "home.recentProjects": "Projetos recentes",
   "home.empty.title": "Nenhum projeto recente",
-  "home.empty.description": "Comece abrindo um projeto local",
+  "home.empty.description": "Abra um projeto local ou conecte um provedor compatível para começar",
 
   "session.tab.session": "Sessão",
   "session.tab.review": "Revisão",

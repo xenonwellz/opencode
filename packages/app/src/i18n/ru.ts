@@ -391,7 +391,7 @@ export const dict = {
 
   "home.recentProjects": "Недавние проекты",
   "home.empty.title": "Нет недавних проектов",
-  "home.empty.description": "Начните с открытия локального проекта",
+  "home.empty.description": "Откройте локальный проект или подключите поддерживаемого провайдера, чтобы начать",
 
   "session.tab.session": "Сессия",
   "session.tab.review": "Обзор",

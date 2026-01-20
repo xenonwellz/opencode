@@ -380,7 +380,7 @@ export const dict = {
 
   "home.recentProjects": "Letzte Projekte",
   "home.empty.title": "Keine letzten Projekte",
-  "home.empty.description": "Starten Sie, indem Sie ein lokales Projekt öffnen",
+  "home.empty.description": "Öffnen Sie ein lokales Projekt oder verbinden Sie einen unterstützten Anbieter, um loszulegen",
 
   "session.tab.session": "Sitzung",
   "session.tab.review": "Überprüfung",

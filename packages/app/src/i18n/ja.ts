@@ -371,7 +371,7 @@ export const dict = {
 
   "home.recentProjects": "最近のプロジェクト",
   "home.empty.title": "最近のプロジェクトはありません",
-  "home.empty.description": "ローカルプロジェクトを開いて始めましょう",
+  "home.empty.description": "ローカルプロジェクトを開くか、サポートされているプロバイダーに接続して開始します",
 
   "session.tab.session": "セッション",
   "session.tab.review": "レビュー",

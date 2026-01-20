@@ -379,7 +379,7 @@ export const dict = {
 
   "home.recentProjects": "Projets récents",
   "home.empty.title": "Aucun projet récent",
-  "home.empty.description": "Commencez par ouvrir un projet local",
+  "home.empty.description": "Ouvrez un projet local ou connectez un fournisseur pris en charge pour commencer",
 
   "session.tab.session": "Session",
   "session.tab.review": "Revue",
