@@ -1993,6 +1993,13 @@ export type ProviderAuthAuthorization = {
   instructions: string
 }
 
+export type GithubKey = {
+  name: string
+  token: string
+  type: "classic" | "fine-grained"
+  createdAt: number
+}
+
 export type Symbol = {
   name: string
   kind: number
@@ -3997,6 +4004,197 @@ export type ProviderOauthCallbackResponses = {
 }
 
 export type ProviderOauthCallbackResponse = ProviderOauthCallbackResponses[keyof ProviderOauthCallbackResponses]
+
+export type GithubKeysListData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/keys"
+}
+
+export type GithubKeysListResponses = {
+  /**
+   * List of GitHub keys
+   */
+  200: Array<{
+    id: string
+    name: string
+    type: "classic" | "fine-grained"
+    createdAt: number
+  }>
+}
+
+export type GithubKeysListResponse = GithubKeysListResponses[keyof GithubKeysListResponses]
+
+export type GithubKeysCreateData = {
+  body?: {
+    name: string
+    token: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/keys"
+}
+
+export type GithubKeysCreateErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubKeysCreateError = GithubKeysCreateErrors[keyof GithubKeysCreateErrors]
+
+export type GithubKeysCreateResponses = {
+  /**
+   * Created key
+   */
+  200: GithubKey
+}
+
+export type GithubKeysCreateResponse = GithubKeysCreateResponses[keyof GithubKeysCreateResponses]
+
+export type GithubKeysDeleteData = {
+  body?: never
+  path: {
+    keyID: string
+  }
+  query?: {
+    directory?: string
+  }
+  url: "/github/keys/{keyID}"
+}
+
+export type GithubKeysDeleteErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubKeysDeleteError = GithubKeysDeleteErrors[keyof GithubKeysDeleteErrors]
+
+export type GithubKeysDeleteResponses = {
+  /**
+   * Key deleted
+   */
+  200: boolean
+}
+
+export type GithubKeysDeleteResponse = GithubKeysDeleteResponses[keyof GithubKeysDeleteResponses]
+
+export type GithubReposListData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    keyID: string
+    query?: string
+    page?: number
+    perPage?: number
+  }
+  url: "/github/repos"
+}
+
+export type GithubReposListErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubReposListError = GithubReposListErrors[keyof GithubReposListErrors]
+
+export type GithubReposListResponses = {
+  /**
+   * List of repositories
+   */
+  200: Array<{
+    id: number
+    name: string
+    full_name: string
+    description: string | null
+    private: boolean
+    default_branch: string
+    updated_at: string | null
+  }>
+}
+
+export type GithubReposListResponse = GithubReposListResponses[keyof GithubReposListResponses]
+
+export type GithubReposBranchesData = {
+  body?: never
+  path: {
+    owner: string
+    repo: string
+  }
+  query: {
+    directory?: string
+    keyID: string
+    query?: string
+    perPage?: number
+  }
+  url: "/github/repos/{owner}/{repo}/branches"
+}
+
+export type GithubReposBranchesErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubReposBranchesError = GithubReposBranchesErrors[keyof GithubReposBranchesErrors]
+
+export type GithubReposBranchesResponses = {
+  /**
+   * List of branches
+   */
+  200: Array<{
+    name: string
+    protected: boolean
+  }>
+}
+
+export type GithubReposBranchesResponse = GithubReposBranchesResponses[keyof GithubReposBranchesResponses]
+
+export type GithubCloneData = {
+  body?: {
+    keyID: string
+    owner: string
+    repo: string
+    branch?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/clone"
+}
+
+export type GithubCloneErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubCloneError = GithubCloneErrors[keyof GithubCloneErrors]
+
+export type GithubCloneResponses = {
+  /**
+   * Clone result
+   */
+  200: {
+    path: string
+  }
+}
+
+export type GithubCloneResponse = GithubCloneResponses[keyof GithubCloneResponses]
 
 export type FindTextData = {
   body?: never
