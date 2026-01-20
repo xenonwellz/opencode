@@ -1,12 +1,22 @@
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { Dialog } from "@opencode-ai/ui/dialog"
 import { FileIcon } from "@opencode-ai/ui/file-icon"
+import { Icon } from "@opencode-ai/ui/icon"
 import { List } from "@opencode-ai/ui/list"
 import { getDirectory, getFilename } from "@opencode-ai/util/path"
 import { createMemo } from "solid-js"
 import { useGlobalSDK } from "@/context/global-sdk"
 import { useGlobalSync } from "@/context/global-sync"
 import { useLanguage } from "@/context/language"
+import { DialogSelectProjectProvider } from "./dialog-select-project-provider"
+
+interface BackItem {
+  id: "__back__"
+  name: string
+  type: "back"
+}
+
+type ListItem = BackItem | string
 
 interface DialogSelectDirectoryProps {
   title?: string
@@ -82,20 +92,57 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
     dialog.close()
   }
 
+  function handleGoBack() {
+    dialog.show(() => (
+      <DialogSelectProjectProvider
+        multiple={props.multiple}
+        onSelect={(path: string) => {
+          dialog.close()
+          props.onSelect(path)
+        }}
+      />
+    ))
+  }
+
+  async function directoriesWithBack(filter: string): Promise<ListItem[]> {
+    const backItem: BackItem = { id: "__back__", name: language.t("dialog.directory.back"), type: "back" }
+    const dirs = await directories(filter)
+    return [backItem, ...dirs]
+  }
+
   return (
     <Dialog title={props.title ?? language.t("command.project.open")}>
       <List
         search={{ placeholder: language.t("dialog.directory.search.placeholder"), autofocus: true }}
         emptyMessage={language.t("dialog.directory.empty")}
         loadingMessage={language.t("common.loading")}
-        items={directories}
-        key={(x) => x}
-        onSelect={(path) => {
-          if (!path) return
-          resolve(path)
+        items={directoriesWithBack}
+        key={(x) => (x as BackItem).id ?? (x as string)}
+        onSelect={(item) => {
+          if (!item) return
+          const backItem = item as BackItem
+          if (backItem.id === "__back__") {
+            handleGoBack()
+            return
+          }
+          resolve(item as string)
         }}
       >
-        {(rel) => {
+        {(item) => {
+          const backItem = item as BackItem
+          if (backItem.id === "__back__") {
+            return (
+              <div class="w-full flex items-center justify-between rounded-md">
+                <div class="flex items-center gap-x-3 grow min-w-0">
+                  <Icon name="arrow-left" class="shrink-0 size-4 text-text-weak" />
+                  <div class="flex flex-col items-start text-left min-w-0">
+                    <span class="text-14-regular text-text-strong truncate">{backItem.name}</span>
+                  </div>
+                </div>
+              </div>
+            )
+          }
+          const rel = item as string
           const path = display(rel)
           return (
             <div class="w-full flex items-center justify-between rounded-md">

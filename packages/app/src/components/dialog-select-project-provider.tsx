@@ -1,4 +1,3 @@
-import { Button } from "@opencode-ai/ui/button"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { Dialog } from "@opencode-ai/ui/dialog"
 import { Icon } from "@opencode-ai/ui/icon"
@@ -9,8 +8,10 @@ import { useGlobalSDK } from "@/context/global-sdk"
 import { DialogSelectDirectory } from "./dialog-select-directory"
 import { DialogAddGithubKey } from "./dialog-add-github-key"
 import { DialogSelectGithubRepo } from "./dialog-select-github-repo"
+import { showToast } from "@opencode-ai/ui/toast"
+import { Button } from "@opencode-ai/ui/button"
 
-type ProviderType = "local" | "github"
+type ProviderType = "local" | "github" | "add_github"
 
 interface ProviderItem {
   type: ProviderType
@@ -51,6 +52,15 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
     return result
   })
 
+  const addGithubItem: ProviderItem = {
+    type: "add_github",
+    id: "add_github",
+    name: "Add GitHub provider",
+    description: "Connect your GitHub account",
+  }
+
+  const allItems = createMemo<ProviderItem[]>(() => [...items(), addGithubItem])
+
   async function loadGithubKeys() {
     setStore("loading", true)
     try {
@@ -70,6 +80,83 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
       setStore("loading", false)
     }
   }
+
+  async function handleDeleteKey(e: Event, keyId: string, keyName: string) {
+    e.stopPropagation()
+    dialog.show(
+      () => (
+        <Dialog
+          title="Delete provider"
+          description={`Are you sure you want to delete "${keyName}"? This will remove the GitHub access token from your machine.`}
+          class="min-h-0"
+        >
+          <div class="flex justify-end gap-2 px-6 pt-2 pb-4">
+            <Button
+              variant="secondary"
+              size="large"
+              onClick={() => {
+                dialog.close()
+                dialog.show(() => <DialogSelectProjectProvider multiple={props.multiple} onSelect={props.onSelect} />)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="secondary"
+              size="large"
+              class="text-text-critical-base hover:bg-surface-critical-base"
+              onClick={async () => {
+                dialog.close()
+                await performDelete(keyId, keyName)
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        </Dialog>
+      ),
+      undefined,
+    )
+  }
+
+  async function performDelete(keyId: string, keyName: string) {
+    try {
+      await globalSDK.client.github.keys.delete({ keyID: keyId })
+      setStore("githubKeys", (prev) => prev.filter((k) => k.id !== keyId))
+      showToast({
+        variant: "success",
+        icon: "circle-check",
+        title: "Provider deleted",
+        description: `"${keyName}" has been removed.`,
+      })
+      dialog.show(() => (
+        <DialogSelectProjectProvider
+          multiple={props.multiple}
+          onSelect={(path: string) => {
+            dialog.close()
+            props.onSelect(path)
+          }}
+        />
+      ))
+    } catch (e) {
+      showToast({
+        variant: "error",
+        icon: "circle-x",
+        title: "Failed to delete provider",
+        description: String(e),
+      })
+      dialog.show(() => (
+        <DialogSelectProjectProvider
+          multiple={props.multiple}
+          onSelect={(path: string) => {
+            dialog.close()
+            props.onSelect(path)
+          }}
+        />
+      ))
+    }
+  }
+
   function handleSelect(provider: ProviderItem) {
     if (provider.type === "local") {
       dialog.show(() => (
@@ -85,6 +172,22 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
           }}
         />
       ))
+    } else if (provider.type === "add_github") {
+      dialog.show(
+        () => (
+          <DialogAddGithubKey
+            onComplete={() => {
+              dialog.close()
+              dialog.show(() => <DialogSelectProjectProvider multiple={props.multiple} onSelect={props.onSelect} />)
+            }}
+            onBack={() => {
+              dialog.close()
+              dialog.show(() => <DialogSelectProjectProvider multiple={props.multiple} onSelect={props.onSelect} />)
+            }}
+          />
+        ),
+        undefined,
+      )
     } else {
       dialog.show(() => (
         <DialogSelectGithubRepo
@@ -99,57 +202,45 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
     }
   }
 
-  function handleAddGithubKey() {
-    dialog.show(
-      () => (
-        <DialogAddGithubKey
-          onComplete={() => {
-            dialog.close()
-            setTimeout(() => {
-              dialog.show(() => <DialogSelectProjectProvider multiple={props.multiple} onSelect={props.onSelect} />)
-            }, 100)
-          }}
-          onCancel={() => {
-            dialog.close()
-          }}
-        />
-      ),
-      undefined,
-    )
-  }
-
   return (
     <Dialog title="Open project" description="Choose how to open your project">
       <div class="flex flex-col gap-4 pb-4">
-        <List
-          search={{ placeholder: "Search providers", autofocus: true }}
-          emptyMessage="No providers available"
-          items={items}
-          key={(x) => x.id}
-          onSelect={(provider) => {
-            if (provider) handleSelect(provider)
-          }}
-        >
-          {(item) => (
-            <div class="w-full flex items-center justify-between rounded-md">
-              <div class="flex items-center gap-x-3 grow min-w-0">
-                <Icon name={item.type === "local" ? "folder" : "github"} class="shrink-0 size-4 text-text-weak" />
-                <div class="flex flex-col items-start text-left min-w-0">
-                  <span class="text-14-regular text-text-strong truncate">{item.name}</span>
-                  <Show when={item.description}>
-                    <span class="text-12-regular text-text-weak truncate">{item.description}</span>
-                  </Show>
+        <div class="max-h-[400px] overflow-y-auto">
+          <List
+            search={{ placeholder: "Search providers", autofocus: true }}
+            emptyMessage="No providers available"
+            items={allItems}
+            key={(x) => x.id}
+            onSelect={(provider) => {
+              if (provider) handleSelect(provider)
+            }}
+          >
+            {(item) => (
+              <div class="w-full flex items-center justify-between rounded-md group">
+                <div class="flex items-center gap-x-3 grow min-w-0">
+                  <Icon
+                    name={item.type === "local" ? "folder" : item.type === "add_github" ? "plus-small" : "github"}
+                    class="shrink-0 size-4 text-text-weak"
+                  />
+                  <div class="flex flex-col items-start text-left min-w-0">
+                    <span class="text-14-regular text-text-strong truncate">{item.name}</span>
+                    <Show when={item.description}>
+                      <span class="text-12-regular text-text-weak truncate">{item.description}</span>
+                    </Show>
+                  </div>
                 </div>
+                <Show when={item.type === "github"}>
+                  <button
+                    onClick={(e) => handleDeleteKey(e, item.id, item.name)}
+                    class="p-1 rounded transition-colors hover:bg-surface-critical-base"
+                    title="Delete provider"
+                  >
+                    <Icon name="trash" class="size-4 text-text-weak hover:text-text-critical-base" />
+                  </button>
+                </Show>
               </div>
-            </div>
-          )}
-        </List>
-
-        <div class="mt-4 px-3 flex flex-col gap-1.5 border-t border-border-weak-base pt-4">
-          <h3 class="text-14-regular text-text-weak">Add GitHub provider</h3>
-          <Button variant="secondary" size="large" icon="plus-small" onClick={handleAddGithubKey} class="w-full">
-            Add GitHub key
-          </Button>
+            )}
+          </List>
         </div>
       </div>
     </Dialog>

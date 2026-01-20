@@ -6,6 +6,8 @@ import { List } from "@opencode-ai/ui/list"
 import { Show, createMemo, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobalSDK } from "@/context/global-sdk"
+import { Spinner } from "@opencode-ai/ui/spinner"
+import { DialogSelectGithubRepo } from "./dialog-select-github-repo"
 
 interface Branch {
   name: string
@@ -16,9 +18,17 @@ interface Branch {
 interface BackItem {
   id: "__back__"
   name: string
+  type: "back"
 }
 
-type ListItem = BackItem | Branch
+interface DefaultBranchItem {
+  id: "__default__"
+  name: string
+  type: "default"
+  defaultBranch: string
+}
+
+type ListItem = BackItem | DefaultBranchItem | Branch
 
 export function DialogSelectGithubBranch(props: {
   keyID: string
@@ -34,7 +44,7 @@ export function DialogSelectGithubBranch(props: {
 
   const [store, setStore] = createStore({
     branches: [] as Branch[],
-    loading: false,
+    loading: true,
     error: undefined as string | undefined,
     query: "",
   })
@@ -74,7 +84,7 @@ export function DialogSelectGithubBranch(props: {
   }
 
   function handleGoBack() {
-    props.onBack()
+    dialog.show(() => <DialogSelectGithubRepo keyID={props.keyID} keyName={props.keyName} onSelect={props.onSelect} />)
   }
 
   const items = createMemo<ListItem[]>(() => {
@@ -83,68 +93,88 @@ export function DialogSelectGithubBranch(props: {
       const q = store.query.toLowerCase()
       branches = branches.filter((b) => b.name.toLowerCase().includes(q))
     }
-    const backItem: BackItem = { id: "__back__", name: "Back to repositories" }
-    return [backItem, ...branches]
+    const backItem: BackItem = { id: "__back__", name: "Back to repositories", type: "back" }
+    const defaultItem: DefaultBranchItem = {
+      id: "__default__",
+      name: `Use default branch (${props.defaultBranch})`,
+      type: "default",
+      defaultBranch: props.defaultBranch,
+    }
+    return [backItem, defaultItem, ...branches]
   })
 
   return (
     <Dialog
       title={
         <div class="flex items-center gap-2">
+          <Show when={store.loading}>
+            <Spinner class="size-4" />
+          </Show>
           <span>Select branch</span>
         </div>
       }
       description={`${props.owner}/${props.repo}`}
     >
-      <div class="flex flex-col gap-4 pb-4">
-        <div class="px-3 py-2 bg-surface-weak-base rounded-md">
-          <Button variant={props.defaultBranch ? "secondary" : "primary"} class="w-full" onClick={handleUseDefault}>
-            Use default branch ({props.defaultBranch})
-          </Button>
+      <Show when={store.error && !store.loading}>
+        <div class="flex items-start gap-2 p-3 bg-surface-critical-base rounded-md border border-border-critical-base mx-3">
+          <Icon name="circle-x" class="shrink-0 size-4 text-icon-critical-base mt-0.5" />
+          <span class="text-14-regular text-text-critical-base">{store.error}</span>
         </div>
-
-        <List
-          search={{ placeholder: "Search branches", autofocus: true }}
-          emptyMessage="No branches found"
-          items={items}
-          key={(x) => x.id ?? x.name}
-          onSelect={(item) => {
-            if (!item) return
-            const backItem = item as BackItem
-            if (backItem.id === "__back__") {
-              handleGoBack()
-              return
-            }
-            handleSelectBranch(item as Branch)
-          }}
-        >
-          {(item) => (
-            <div class="w-full flex items-center justify-between rounded-md">
-              <div class="flex items-center gap-x-3 grow min-w-0">
-                <Icon
-                  name={(item as BackItem).id === "__back__" ? "arrow-left" : "branch"}
-                  class="shrink-0 size-4 text-text-weak"
-                />
-                <div class="flex flex-col items-start text-left min-w-0">
-                  <span class="text-14-regular text-text-strong truncate">{item.name}</span>
-                  {(item as Branch).protected && (
-                    <Show when={(item as Branch).protected}>
-                      <span class="text-12-regular text-text-warning-base">Protected</span>
-                    </Show>
-                  )}
-                </div>
+      </Show>
+      <List
+        search={{ placeholder: "Search branches", autofocus: true }}
+        emptyMessage="No branches found"
+        items={items}
+        key={(x) => x.id ?? x.name}
+        onSelect={(item) => {
+          if (!item) return
+          const backItem = item as BackItem
+          if (backItem.id === "__back__") {
+            handleGoBack()
+            return
+          }
+          const defaultItem = item as DefaultBranchItem
+          if (defaultItem.id === "__default__") {
+            handleUseDefault()
+            return
+          }
+          handleSelectBranch(item as Branch)
+        }}
+      >
+        {(item) => (
+          <div class="w-full flex items-center justify-between rounded-md">
+            <div class="flex items-center gap-x-3 grow min-w-0">
+              <Icon
+                name={
+                  (item as BackItem).id === "__back__"
+                    ? "arrow-left"
+                    : (item as DefaultBranchItem).id === "__default__"
+                      ? "check"
+                      : "branch"
+                }
+                class="shrink-0 size-4 text-text-weak"
+              />
+              <div class="flex flex-col items-start text-left min-w-0">
+                <span class="text-14-regular text-text-strong truncate">{item.name}</span>
+                {(item as Branch).protected && (
+                  <Show when={(item as Branch).protected}>
+                    <span class="text-12-regular text-text-warning-base">Protected</span>
+                  </Show>
+                )}
               </div>
-              {(item as Branch).name === props.defaultBranch && (
-                <Icon name="check-small" class="size-4 text-icon-success-base" />
-              )}
             </div>
-          )}
-        </List>
-
-        <Show when={store.error}>
-          <div class="text-14-regular text-text-critical-base px-3">{store.error}</div>
-        </Show>
-      </div>
+            {(item as Branch).name === props.defaultBranch && (
+              <Icon name="check-small" class="size-4 text-icon-success-base" />
+            )}
+          </div>
+        )}
+      </List>
+      <Show when={store.loading}>
+        <div class="flex items-center justify-center gap-2 py-2">
+          <Spinner class="size-4" />
+          <span class="text-14-regular text-text-weak">Loading branches...</span>
+        </div>
+      </Show>
     </Dialog>
   )
 }

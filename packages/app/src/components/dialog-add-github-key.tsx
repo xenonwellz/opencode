@@ -1,13 +1,15 @@
 import { Button } from "@opencode-ai/ui/button"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { Dialog } from "@opencode-ai/ui/dialog"
+import { Icon } from "@opencode-ai/ui/icon"
 import { TextField } from "@opencode-ai/ui/text-field"
 import { showToast } from "@opencode-ai/ui/toast"
 import { Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobalSDK } from "@/context/global-sdk"
+import { DialogSelectProjectProvider } from "./dialog-select-project-provider"
 
-export function DialogAddGithubKey(props: { onComplete?: () => void; onCancel?: () => void }) {
+export function DialogAddGithubKey(props: { onComplete?: () => void; onBack?: () => void }) {
   const dialog = useDialog()
   const globalSDK = useGlobalSDK()
 
@@ -17,6 +19,17 @@ export function DialogAddGithubKey(props: { onComplete?: () => void; onCancel?: 
     loading: false,
     error: undefined as string | undefined,
   })
+
+  function isTokenError(error: string): boolean {
+    const lower = error.toLowerCase()
+    return (
+      lower.includes("401") ||
+      lower.includes("unauthorized") ||
+      lower.includes("bad credentials") ||
+      lower.includes("invalid token") ||
+      lower.includes("authentication")
+    )
+  }
 
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault()
@@ -50,24 +63,28 @@ export function DialogAddGithubKey(props: { onComplete?: () => void; onCancel?: 
 
       props.onComplete?.()
     } catch (e) {
-      setStore("error", String(e))
+      const errorMsg = String(e)
+      if (isTokenError(errorMsg)) {
+        setStore("error", "There was an error with the provided token, this token may no longer be valid")
+      } else {
+        setStore("error", errorMsg)
+      }
     } finally {
       setStore("loading", false)
     }
   }
 
-  function handleCancel() {
-    props.onCancel?.()
+  function handleBack() {
+    props.onBack?.()
   }
 
   return (
-    <Dialog title="Add GitHub key" description="Add a GitHub personal access token to access your repositories">
-      <form onSubmit={handleSubmit} class="flex flex-col gap-6 p-6">
+    <Dialog
+      title="Add GitHub key"
+      description=" Enter a name for this key and your GitHub personal access token. The token will be stored securely on your machine."
+    >
+      <form onSubmit={handleSubmit} class="flex flex-col gap-6 p-6 pt-0">
         <div class="flex flex-col gap-4">
-          <div class="text-14-regular text-text-base">
-            Enter a name for this key and your GitHub personal access token. The token will be stored securely on your
-            machine.
-          </div>
           <div class="text-14-regular text-text-weak">
             <a href="https://github.com/settings/tokens" target="_blank" class="underline">
               Create a token on GitHub
@@ -96,15 +113,23 @@ export function DialogAddGithubKey(props: { onComplete?: () => void; onCancel?: 
         />
 
         <Show when={store.error && store.name && store.token}>
-          <div class="text-14-regular text-text-critical-base">{store.error}</div>
+          <div class="flex items-start gap-2 p-3 bg-surface-critical-base rounded-md border border-border-critical-base">
+            <Icon name="circle-x" class="shrink-0 size-4 text-icon-critical-base mt-0.5" />
+            <span class="text-14-regular text-text-critical-base">{store.error}</span>
+          </div>
         </Show>
 
         <div class="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={handleCancel}>
-            Cancel
+          <Button type="button" variant="secondary" size="large" onClick={handleBack}>
+            Back to providers
           </Button>
-          <Button type="submit" variant="primary" disabled={store.loading}>
-            {store.loading ? "Adding..." : "Add key"}
+          <Button type="submit" variant="primary" size="large" disabled={store.loading}>
+            <Show when={store.loading} fallback={"Add key"}>
+              <div class="flex items-center gap-2">
+                <div class="size-4 animate-spin border-2 border-text-strong border-t-transparent rounded-full" />
+                Adding...
+              </div>
+            </Show>
           </Button>
         </div>
       </form>

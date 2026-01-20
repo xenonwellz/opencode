@@ -1,5 +1,4 @@
 import { Show } from "solid-js"
-import { Button } from "@opencode-ai/ui/button"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { Dialog } from "@opencode-ai/ui/dialog"
 import { Icon } from "@opencode-ai/ui/icon"
@@ -36,7 +35,7 @@ export function DialogSelectGithubRepo(props: { keyID: string; keyName: string; 
 
   const [store, setStore] = createStore({
     repos: [] as Repo[],
-    loading: false,
+    loading: true,
     loadingMore: false,
     error: undefined as string | undefined,
     page: 1,
@@ -80,18 +79,6 @@ export function DialogSelectGithubRepo(props: { keyID: string; keyName: string; 
   onMount(() => {
     loadRepos(true)
   })
-
-  function handleGoBack() {
-    dialog.show(() => (
-      <DialogSelectProjectProvider
-        multiple={false}
-        onSelect={(path: string) => {
-          dialog.close()
-          props.onSelect(path)
-        }}
-      />
-    ))
-  }
 
   function handleSelectRepo(repo: Repo) {
     setSelectedRepo(repo)
@@ -158,52 +145,80 @@ export function DialogSelectGithubRepo(props: { keyID: string; keyName: string; 
 
   return (
     <Dialog
-      title={
-        <div class="flex items-center gap-2">
-          <span>Select repository</span>
-        </div>
-      }
+      title="Select repository"
       description={`Connected with ${props.keyName}`}
     >
-      <div class="flex flex-col gap-4 pb-4">
-        <List
-          search={{ placeholder: "Search repositories", autofocus: true }}
-          emptyMessage="No repositories found"
-          items={items}
-          key={(x) => (typeof x.id === "number" ? x.id.toString() : x.id)}
-          onSelect={(item) => {
-            if (!item) return
-            const backItem = item as BackItem
-            if (backItem.id === "__back__") {
-              handleGoBack()
-              return
-            }
-            handleSelectRepo(item as Repo)
-          }}
-        >
-          {(item) => (
-            <div class="w-full flex items-center justify-between rounded-md">
-              <div class="flex items-center gap-x-3 grow min-w-0">
-                <Icon
-                  name={(item as BackItem).id === "__back__" ? "arrow-left" : "github"}
-                  class="shrink-0 size-4 text-text-weak"
-                />
-                <div class="flex flex-col items-start text-left min-w-0">
-                  <span class="text-14-regular text-text-strong truncate">{item.name}</span>
-                  {"description" in item && item.description && (
-                    <span class="text-12-regular text-text-weak truncate max-w-[300px]">{item.description}</span>
-                  )}
-                </div>
-              </div>
-              {"full_name" in item && <Icon name="chevron-right" class="size-4 text-text-weak" />}
-            </div>
-          )}
-        </List>
 
-        <Show when={store.error}>
-          <div class="text-14-regular text-text-critical-base px-3">{store.error}</div>
-        </Show>
-      </div>
+      <List
+        search={{ placeholder: "Search repositories", autofocus: true }}
+        emptyMessage="No repositories found"
+        items={items}
+        key={(x) => (typeof x.id === "number" ? x.id.toString() : x.id)}
+        onSelect={(item) => {
+          if (!item) return
+          const backItem = item as BackItem
+          if (backItem.id === "__back__") {
+            dialog.show(() => (
+              <DialogSelectProjectProvider
+                multiple={false}
+                onSelect={(path: string) => {
+                  dialog.close()
+                  props.onSelect(path)
+                }}
+              />
+            ))
+            return
+          }
+          handleSelectRepo(item as Repo)
+        }}
+      >
+        {(item) => (
+          <div class="w-full flex items-center justify-between rounded-md">
+            <div class="flex items-center gap-x-3 grow min-w-0">
+              <Icon
+                name={(item as BackItem).id === "__back__" ? "arrow-left" : "github"}
+                class="shrink-0 size-4 text-text-weak"
+              />
+              <div class="flex flex-col items-start text-left min-w-0">
+                <span class="text-14-regular text-text-strong truncate">{item.name}</span>
+                {"description" in item && item.description ? (
+                  <span class="text-12-regular text-text-weak truncate max-w-[300px]">{item.description}</span>
+                ) : (
+                  "description" in item && (
+                    <span class="text-12-regular text-text-weak truncate max-w-[300px] italic opacity-50">No description</span>
+                  )
+                )}
+              </div>
+            </div>
+            {"full_name" in item && <Icon name="chevron-right" class="size-4 text-text-weak" />}
+          </div>
+        )}
+      </List>
+
+      <Show when={store.loading}>
+        <div class="flex items-center justify-center gap-2 py-2">
+          <Spinner class="size-4" />
+          <span class="text-14-regular text-text-weak">Loading repositories...</span>
+        </div>
+      </Show>
+
+      <Show when={store.error && !store.loading}>
+        <div class="flex items-start gap-2 p-3 bg-surface-critical-base rounded-md border border-border-critical-base mx-3 mb-3">
+          <Icon name="circle-x" class="shrink-0 size-4 text-icon-critical-base mt-0.5" />
+          <span class="text-14-regular text-text-critical-base">
+            There was an error loading repositories, this can be caused by incorrect configuration or invalid/expired token.
+            <br />
+            Please check your configuration and try again.
+          </span>
+        </div>
+      </Show>
+
+      <Show when={store.loadingMore}>
+        <div class="flex items-center justify-center gap-2 py-2">
+          <Spinner class="size-4" />
+          <span class="text-14-regular text-text-weak">Loading more...</span>
+        </div>
+      </Show>
     </Dialog>
   )
 }

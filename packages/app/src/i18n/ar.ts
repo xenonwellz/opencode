@@ -230,6 +230,7 @@ export const dict = {
 
   "dialog.directory.search.placeholder": "البحث في المجلدات",
   "dialog.directory.empty": "لم يتم العثور على مجلدات",
+  "dialog.directory.back": "العودة إلى الموفرين",
 
   "dialog.server.title": "الخوادم",
   "dialog.server.description": "تبديل خادم OpenCode الذي يتصل به هذا التطبيق.",

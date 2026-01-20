@@ -211,6 +211,7 @@ export const dict = {
 
   "dialog.directory.search.placeholder": "フォルダを検索",
   "dialog.directory.empty": "フォルダが見つかりません",
+  "dialog.directory.back": "プロバイダーに戻る",
 
   "dialog.server.title": "サーバー",
   "dialog.server.description": "このアプリが接続するOpenCodeサーバーを切り替えます。",

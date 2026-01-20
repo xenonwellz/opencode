@@ -215,6 +215,7 @@ export const dict = {
 
   "dialog.directory.search.placeholder": "폴더 검색",
   "dialog.directory.empty": "폴더 없음",
+  "dialog.directory.back": "공급자로 돌아가기",
 
   "dialog.server.title": "서버",
   "dialog.server.description": "이 앱이 연결할 OpenCode 서버를 전환합니다.",
