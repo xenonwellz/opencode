@@ -6,10 +6,10 @@ import { Show, createMemo, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobalSDK } from "@/context/global-sdk"
 import { DialogSelectDirectory } from "./dialog-select-directory"
-import { DialogAddGithubKey } from "./dialog-add-github-key"
 import { DialogSelectGithubRepo } from "./dialog-select-github-repo"
 import { showToast } from "@opencode-ai/ui/toast"
 import { Button } from "@opencode-ai/ui/button"
+import { DialogSelectProjectProviderType } from "./dialog-select-project-provider-type"
 
 type ProviderType = "local" | "github" | "add_github"
 
@@ -55,8 +55,8 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
   const addGithubItem: ProviderItem = {
     type: "add_github",
     id: "add_github",
-    name: "Add GitHub provider",
-    description: "Connect your GitHub account",
+    name: "Add provider",
+    description: "Connect a new provider",
   }
 
   const allItems = createMemo<ProviderItem[]>(() => [...items(), addGithubItem])
@@ -175,11 +175,7 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
     } else if (provider.type === "add_github") {
       dialog.show(
         () => (
-          <DialogAddGithubKey
-            onComplete={() => {
-              dialog.close()
-              dialog.show(() => <DialogSelectProjectProvider multiple={props.multiple} onSelect={props.onSelect} />)
-            }}
+          <DialogSelectProjectProviderType
             onBack={() => {
               dialog.close()
               dialog.show(() => <DialogSelectProjectProvider multiple={props.multiple} onSelect={props.onSelect} />)

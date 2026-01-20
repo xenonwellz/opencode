@@ -42,11 +42,6 @@ export function DialogSelectGithubRepo(props: { keyID: string; keyName: string; 
     query: "",
   })
 
-  const [selectedRepo, setSelectedRepo] = createSignal<Repo | null>(null)
-  const [isCloning, setIsCloning] = createSignal(false)
-  const [cloningRepo, setCloningRepo] = createSignal<Repo | null>(null)
-  const [cloningBranch, setCloningBranch] = createSignal<string | undefined>(undefined)
-
   async function loadRepos(reset = false) {
     if (reset) {
       setStore({ repos: [], page: 1, hasMore: true })
@@ -83,7 +78,6 @@ export function DialogSelectGithubRepo(props: { keyID: string; keyName: string; 
   })
 
   function handleSelectRepo(repo: Repo) {
-    setSelectedRepo(repo)
     dialog.show(() => (
       <DialogSelectGithubBranch
         keyID={props.keyID}
@@ -92,14 +86,10 @@ export function DialogSelectGithubRepo(props: { keyID: string; keyName: string; 
         repo={repo.name}
         defaultBranch={repo.default_branch}
         onSelect={async (branch) => {
-          setIsCloning(true)
-          setCloningRepo(repo)
-          setCloningBranch(branch)
           dialog.show(() => <DialogCloning repo={repo} branch={branch} keyID={props.keyID} onSelect={props.onSelect} />)
           await handleClone(repo, branch)
         }}
         onBack={() => {
-          setSelectedRepo(null)
           dialog.show(() => (
             <DialogSelectGithubRepo keyID={props.keyID} keyName={props.keyName} onSelect={props.onSelect} />
           ))
@@ -135,7 +125,6 @@ export function DialogSelectGithubRepo(props: { keyID: string; keyName: string; 
         title: "Failed to clone repository",
         description: String(e),
       })
-      setIsCloning(false)
       dialog.show(() => <DialogSelectProjectProvider multiple={false} onSelect={props.onSelect} />)
     }
   }
@@ -179,7 +168,20 @@ export function DialogSelectGithubRepo(props: { keyID: string; keyName: string; 
                 class="shrink-0 size-4 text-text-weak"
               />
               <div class="flex flex-col items-start text-left min-w-0">
-                <span class="text-14-regular text-text-strong truncate">{(item as Repo).name}</span>
+                <Show
+                  when={(item as BackItem).id === "__back__"}
+                  fallback={
+                    <div class="flex items-start text-left min-w-0 gap-2">
+                      <span class="text-14-regular text-text-weak truncate">
+                        {(item as Repo).full_name.split("/").slice(0, -1).join("/")}
+                      </span>
+                      <span class="text-14-regular text-text-weak truncate">/</span>
+                      <span class="text-14-regular text-text-strong truncate">{(item as Repo).name}</span>
+                    </div>
+                  }
+                >
+                  <span class="text-14-regular text-text-strong truncate">{(item as Repo).name}</span>
+                </Show>
                 {"description" in item && (item as Repo).description ? (
                   <span class="text-12-regular text-text-weak truncate max-w-[300px]">
                     {(item as Repo).description}
@@ -229,7 +231,7 @@ export function DialogSelectGithubRepo(props: { keyID: string; keyName: string; 
 
 function DialogCloning(props: { repo: Repo; branch?: string; keyID: string; onSelect: (path: string) => void }) {
   return (
-    <Dialog title="Cloning repository" class="min-h-0">
+    <Dialog title="Cloning repository" class="min-h-0" action={<div />}>
       <div class="flex flex-col items-center justify-center py-12 gap-4 pb-6 px-6">
         <Spinner class="size-10" />
         <span class="text-14-medium text-text-strong">Cloning {props.repo.full_name}...</span>

@@ -121,7 +121,7 @@ export function DialogAddGithubKey(props: { onComplete?: () => void; onBack?: ()
 
         <div class="flex justify-end gap-2">
           <Button type="button" variant="secondary" size="large" onClick={handleBack}>
-            Back to providers
+            Back
           </Button>
           <Button type="submit" variant="primary" size="large" disabled={store.loading}>
             <Show when={store.loading} fallback={"Add key"}>
