@@ -13,6 +13,7 @@ import { createStore } from "solid-js/store"
 import { useGlobalSDK } from "@/context/global-sdk"
 import { useGlobalSync } from "@/context/global-sync"
 import { useLanguage } from "@/context/language"
+import { useGitHubProjects } from "@/context/github-projects"
 
 // ============================================================================
 // Types
@@ -678,6 +679,7 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
     const dialog = useDialog()
     const globalSDK = useGlobalSDK()
     const language = useLanguage()
+    const githubProjects = useGitHubProjects()
 
     const [store, setStore] = createStore({
         repos: [] as Repo[],
@@ -739,24 +741,52 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
     }
 
     async function handleClone(repo: Repo, branch?: string) {
+        const owner = repo.full_name.split("/")[0]
+        const baseBranch = branch ?? repo.default_branch
+
         try {
             // @ts-ignore - SDK will be regenerated
             const response = await globalSDK.client.github.clone({
                 keyID: props.keyID,
-                owner: repo.full_name.split("/")[0],
+                owner,
                 repo: repo.name,
                 branch,
             })
 
             if (response.data?.path) {
+                const projectPath = response.data.path
+                const workingBranch = `opencode/${baseBranch}`
+
+                // Create working branch for OpenCode changes
+                try {
+                    // @ts-ignore - SDK will be regenerated
+                    await globalSDK.client.github.branch.create({
+                        keyID: props.keyID,
+                        directory: projectPath,
+                        name: workingBranch,
+                    })
+                } catch {
+                    // Branch might already exist, ignore error
+                }
+
+                // Register this project in GitHub projects storage
+                githubProjects.register({
+                    projectId: projectPath,
+                    keyId: props.keyID,
+                    owner,
+                    repo: repo.name,
+                    baseBranch,
+                    workingBranch,
+                })
+
                 showToast({
                     variant: "success",
                     icon: "circle-check",
                     title: language.t("dialog.project.clone.success.title"),
-                    description: language.t("dialog.project.clone.success.description", { name: repo.full_name }),
+                    description: `Cloned ${repo.full_name} and created branch ${workingBranch}`,
                 })
                 dialog.close()
-                props.onSelect(response.data.path)
+                props.onSelect(projectPath)
             }
         } catch (e) {
             showToast({

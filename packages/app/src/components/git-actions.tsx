@@ -7,6 +7,7 @@ import { showToast } from "@opencode-ai/ui/toast"
 import { useSDK } from "@/context/sdk"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { getFilename } from "@opencode-ai/util/path"
+import { useGitHubProjects } from "@/context/github-projects"
 
 interface GitActionsProps {
     class?: string
@@ -22,6 +23,7 @@ interface GitHubKey {
 export const GitActions: Component<GitActionsProps> = (props) => {
     const sdk = useSDK()
     const dialog = useDialog()
+    const githubProjects = useGitHubProjects()
 
     const [pushing, setPushing] = createSignal(false)
     const [creatingPR, setCreatingPR] = createSignal(false)
@@ -33,13 +35,30 @@ export const GitActions: Component<GitActionsProps> = (props) => {
     } | null>(null)
     const [hasRemote, setHasRemote] = createSignal(false)
 
-    // Get the first available GitHub key
+    // Get GitHub project info for current directory
+    const githubProject = createMemo(() => {
+        const project = githubProjects.get(sdk.directory)
+        return project()
+    })
+
+    // Get the first available GitHub key (prefer from project, fallback to list)
     const githubKey = createMemo(() => {
+        const project = githubProject()
+        if (project) {
+            // Return a minimal key object from the stored project
+            return { id: project.keyId, name: "", type: "classic" as const, createdAt: 0 }
+        }
         const keys = githubKeys()
         return keys[0]
     })
 
     const hasGitHubKey = createMemo(() => !!githubKey())
+
+    // Check if this is a GitHub project with PR info
+    const hasPR = createMemo(() => {
+        const project = githubProject()
+        return project?.prNumber !== undefined && project?.prUrl !== undefined
+    })
 
     // Fetch GitHub keys
     const fetchKeys = async () => {
@@ -113,9 +132,11 @@ export const GitActions: Component<GitActionsProps> = (props) => {
         }
     }
 
-    // Create PR
-    const handleCreatePR = async () => {
+    // Create Draft PR
+    const handleCreateDraftPR = async () => {
         const key = githubKey()
+        const project = githubProject()
+
         if (!key) {
             showToast({
                 title: "No GitHub key configured",
@@ -134,12 +155,17 @@ export const GitActions: Component<GitActionsProps> = (props) => {
                 body_directory: sdk.directory,
                 title: `OpenCode: Changes to ${projectName}`,
                 body: `Automated PR created by OpenCode.\n\nBranch: ${status?.branch || "unknown"}`,
-                baseBranch: "main", // TODO: Get target branch from project config
+                baseBranch: project?.baseBranch ?? "main",
             })
 
             if (result.data) {
+                // Update the GitHub project with PR info
+                if (project) {
+                    githubProjects.setPR(sdk.directory, result.data.number, result.data.url)
+                }
+
                 showToast({
-                    title: "PR created",
+                    title: "Draft PR created",
                     description: `PR #${result.data.number}: ${result.data.title}`,
                 })
             } else {
@@ -156,29 +182,10 @@ export const GitActions: Component<GitActionsProps> = (props) => {
     }
 
     // View existing PR
-    const handleViewPR = async () => {
-        const key = githubKey()
-        if (!key) return
-
-        try {
-            const result = await sdk.client.github.pullRequests.get({
-                keyID: key.id,
-                directory: sdk.directory,
-            })
-
-            if (result.data) {
-                window.open(result.data.url, "_blank")
-            } else {
-                showToast({
-                    title: "No PR found",
-                    description: "No pull request exists for the current branch.",
-                })
-            }
-        } catch (error) {
-            showToast({
-                title: "Failed to get PR",
-                description: String(error),
-            })
+    const handleViewPR = () => {
+        const project = githubProject()
+        if (project?.prUrl) {
+            window.open(project.prUrl, "_blank")
         }
     }
 
@@ -225,29 +232,35 @@ export const GitActions: Component<GitActionsProps> = (props) => {
                     </Button>
                 </Tooltip>
 
-                {/* Create PR Button */}
-                <Tooltip placement="bottom" value="Create a pull request">
-                    <Button
-                        variant="ghost"
-                        size="small"
-                        disabled={creatingPR()}
-                        onClick={handleCreatePR}
-                        class="gap-1.5"
+                {/* Create/View PR Button */}
+                <Show when={githubProject()}>
+                    <Show
+                        when={hasPR()}
+                        fallback={
+                            <Tooltip placement="bottom" value="Create a draft pull request">
+                                <Button
+                                    variant="ghost"
+                                    size="small"
+                                    disabled={creatingPR()}
+                                    onClick={handleCreateDraftPR}
+                                    class="gap-1.5"
+                                >
+                                    <Show when={creatingPR()} fallback={<Icon name="branch" size="small" />}>
+                                        <Spinner class="size-3" />
+                                    </Show>
+                                    Create PR
+                                </Button>
+                            </Tooltip>
+                        }
                     >
-                        <Show when={creatingPR()} fallback={<Icon name="branch" size="small" />}>
-                            <Spinner class="size-3" />
-                        </Show>
-                        Create PR
-                    </Button>
-                </Tooltip>
-
-                {/* View PR Button */}
-                <Tooltip placement="bottom" value="View existing pull request">
-                    <Button variant="ghost" size="small" onClick={handleViewPR} class="gap-1.5">
-                        <Icon name="share" size="small" />
-                        View PR
-                    </Button>
-                </Tooltip>
+                        <Tooltip placement="bottom" value="View pull request on GitHub">
+                            <Button variant="ghost" size="small" onClick={handleViewPR} class="gap-1.5">
+                                <Icon name="share" size="small" />
+                                View PR
+                            </Button>
+                        </Tooltip>
+                    </Show>
+                </Show>
             </div>
         </Show>
     )

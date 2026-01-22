@@ -24,6 +24,7 @@ import { DialogProvider } from "@opencode-ai/ui/context/dialog"
 import { CommandProvider } from "@/context/command"
 import { LanguageProvider, useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
+import { GitHubProjectsProvider } from "@/context/github-projects"
 import { Logo } from "@opencode-ai/ui/logo"
 import Layout from "@/pages/layout"
 import DirectoryLayout from "@/pages/directory-layout"
@@ -98,22 +99,23 @@ export function AppInterface(props: { defaultUrl?: string }) {
       <ServerKey>
         <GlobalSDKProvider>
           <GlobalSyncProvider>
-            <Router
-              root={(props) => (
-                <SettingsProvider>
-                  <PermissionProvider>
-                    <LayoutProvider>
-                      <NotificationProvider>
-                        <CommandProvider>
-                          <Layout>{props.children}</Layout>
-                        </CommandProvider>
-                      </NotificationProvider>
-                    </LayoutProvider>
-                  </PermissionProvider>
-                </SettingsProvider>
-              )}
-            >
-              <Route
+            <GitHubProjectsProvider>
+              <Router
+                root={(props) => (
+                  <SettingsProvider>
+                    <PermissionProvider>
+                      <LayoutProvider>
+                        <NotificationProvider>
+                          <CommandProvider>
+                            <Layout>{props.children}</Layout>
+                          </CommandProvider>
+                        </NotificationProvider>
+                      </LayoutProvider>
+                    </PermissionProvider>
+                  </SettingsProvider>
+                )}
+              >
+                <Route
                 path="/"
                 component={() => (
                   <Suspense fallback={<Loading />}>
@@ -141,6 +143,7 @@ export function AppInterface(props: { defaultUrl?: string }) {
                 />
               </Route>
             </Router>
+            </GitHubProjectsProvider>
           </GlobalSyncProvider>
         </GlobalSDKProvider>
       </ServerKey>
