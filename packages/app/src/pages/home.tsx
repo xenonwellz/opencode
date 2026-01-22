@@ -8,11 +8,11 @@ import { Icon } from "@opencode-ai/ui/icon"
 import { usePlatform } from "@/context/platform"
 import { DateTime } from "luxon"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
-import { DialogSelectDirectory } from "@/components/dialog-select-directory"
 import { DialogSelectServer } from "@/components/dialog-select-server"
 import { useServer } from "@/context/server"
 import { useGlobalSync } from "@/context/global-sync"
 import { useLanguage } from "@/context/language"
+import { DialogSelectProjectProvider } from "@/components/dialog-select-project"
 
 export default function Home() {
   const sync = useGlobalSync()
@@ -49,7 +49,7 @@ export default function Home() {
       resolve(result)
     } else {
       dialog.show(
-        () => <DialogSelectDirectory multiple={true} onSelect={resolve} />,
+        () => <DialogSelectProjectProvider multiple={true} onSelect={resolve} />,
         () => resolve(null),
       )
     }

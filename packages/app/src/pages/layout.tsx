@@ -59,13 +59,14 @@ import { playSound, soundSrc } from "@/utils/sound"
 
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { useTheme, type ColorScheme } from "@opencode-ai/ui/theme"
+import { DialogSelectProjectProvider, DialogSelectDirectory } from "@/components/dialog-select-project"
 import { DialogSelectProvider } from "@/components/dialog-select-provider"
 import { DialogSelectServer } from "@/components/dialog-select-server"
 import { DialogSettings } from "@/components/dialog-settings"
 import { useCommand, type CommandOption } from "@/context/command"
 import { ConstrainDragXAxis } from "@/utils/solid-dnd"
 import { navStart } from "@/utils/perf"
-import { DialogSelectDirectory } from "@/components/dialog-select-directory"
+
 import { DialogEditProject } from "@/components/dialog-edit-project"
 import { Titlebar } from "@/components/titlebar"
 import { useServer } from "@/context/server"
@@ -493,27 +494,7 @@ export default function Layout(props: ParentProps) {
     ),
   )
 
-  createEffect(
-    on(
-      () => ({ ready: pageReady(), layoutReady: layoutReady(), dir: params.dir, list: layout.projects.list() }),
-      (value) => {
-        if (!value.ready) return
-        if (!value.layoutReady) return
-        if (!autoselect()) return
-        if (initialDir) return
-        if (value.dir) return
-        if (value.list.length === 0) return
-
-        const last = server.projects.last()
-        const next = value.list.find((project) => project.worktree === last) ?? value.list[0]
-        if (!next) return
-        setAutoselect(false)
-        openProject(next.worktree, false)
-        navigateToProject(next.worktree)
-      },
-      { defer: true },
-    ),
-  )
+  // Auto-navigation from home removed - user stays on home screen until they choose a project
 
   const workspaceKey = (directory: string) => directory.replace(/[\\/]+$/, "")
 
@@ -1068,7 +1049,7 @@ export default function Layout(props: ParentProps) {
       resolve(result)
     } else {
       dialog.show(
-        () => <DialogSelectDirectory multiple={true} onSelect={resolve} />,
+        () => <DialogSelectProjectProvider multiple={true} onSelect={resolve} />,
         () => resolve(null),
       )
     }
@@ -2038,8 +2019,8 @@ export default function Layout(props: ParentProps) {
         type="button"
         aria-label={projectName()}
         classList={{
-          "flex items-center justify-center size-10 p-1 rounded-lg overflow-hidden transition-colors cursor-default": true,
-          "bg-transparent border-2 border-icon-strong-base hover:bg-surface-base-hover": selected(),
+          "box-border rounded-lg overflow-hidden transition-colors cursor-pointer": true,
+          "bg-transparent border border-icon-strong-base hover:bg-surface-base-hover": selected(),
           "bg-transparent border border-transparent hover:bg-surface-base-hover hover:border-border-weak-base":
             !selected() && !open(),
           "bg-surface-base-hover border border-border-weak-base": !selected() && open(),
@@ -2047,7 +2028,9 @@ export default function Layout(props: ParentProps) {
         onClick={() => navigateToProject(props.project.worktree)}
         onBlur={() => setOpen(false)}
       >
-        <ProjectIcon project={props.project} notify />
+        <span class="flex border-4 border-transparent">
+          <ProjectIcon project={props.project} notify />
+        </span>
       </button>
     )
 
@@ -2126,22 +2109,17 @@ export default function Layout(props: ParentProps) {
                 </For>
               </Show>
             </div>
-            <div class="px-2 py-2 border-t border-border-weak-base">
-              <Button
-                variant="ghost"
-                class="flex w-full text-left justify-start text-text-base px-2 hover:bg-transparent active:bg-transparent"
-                onClick={() => {
-                  if (selected()) {
-                    setOpen(false)
-                    return
-                  }
-                  layout.sidebar.open()
-                  navigateToProject(props.project.worktree)
-                }}
-              >
-                {language.t("sidebar.project.viewAllSessions")}
-              </Button>
-            </div>
+              <div class="px-2 py-2 border-t border-border-weak-base">
+                <Button
+                  variant="ghost"
+                  class="flex w-full text-left justify-start text-text-base px-2 hover:bg-transparent active:bg-transparent cursor-pointer"
+                  onClick={() => {
+                    navigate(`/${base64Encode(props.project.worktree)}/session`)
+                  }}
+                >
+                  {language.t("command.session.new")}
+                </Button>
+              </div>
           </div>
         </HoverCard>
       </div>
@@ -2278,13 +2256,13 @@ export default function Layout(props: ParentProps) {
                     </div>
                   }
                 >
-                  <IconButton
-                    icon="plus"
-                    variant="ghost"
-                    size="large"
-                    onClick={chooseProject}
-                    aria-label={language.t("command.project.open")}
-                  />
+                  <IconButton icon="plus" variant="ghost" size="large" class="border border-border-weak-base cursor-pointer" onClick={chooseProject} />
+                </Tooltip>
+                <Tooltip
+                  placement={sidebarProps.mobile ? "bottom" : "right"}
+                  value="Home"
+                >
+                  <IconButton icon="home" variant="ghost" size="large" class="border border-border-weak-base cursor-pointer" onClick={() => navigate("/")} />
                 </Tooltip>
               </div>
               <DragOverlay>

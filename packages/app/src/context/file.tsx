@@ -387,9 +387,9 @@ export const { use: useFile, provider: FileProvider } = createSimpleContext({
       selectedLines,
       setSelectedLines,
       searchFiles: (query: string) =>
-        sdk.client.find.files({ query, dirs: "false" }).then((x) => (x.data ?? []).map(normalize)),
+        sdk.client.search.files({ query, dirs: "false" }).then((x) => (x.data ?? []).map(normalize)),
       searchFilesAndDirectories: (query: string) =>
-        sdk.client.find.files({ query, dirs: "true" }).then((x) => (x.data ?? []).map(normalize)),
+        sdk.client.search.files({ query, dirs: "true" }).then((x) => (x.data ?? []).map(normalize)),
     }
   },
 })

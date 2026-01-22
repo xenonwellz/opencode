@@ -1993,6 +1993,13 @@ export type ProviderAuthAuthorization = {
   instructions: string
 }
 
+export type GithubKey = {
+  name: string
+  token: string
+  type: "classic" | "fine-grained"
+  createdAt: number
+}
+
 export type Symbol = {
   name: string
   kind: number
@@ -3998,6 +4005,369 @@ export type ProviderOauthCallbackResponses = {
 
 export type ProviderOauthCallbackResponse = ProviderOauthCallbackResponses[keyof ProviderOauthCallbackResponses]
 
+export type GithubKeysListData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/keys"
+}
+
+export type GithubKeysListResponses = {
+  /**
+   * List of GitHub keys
+   */
+  200: Array<{
+    id: string
+    name: string
+    type: "classic" | "fine-grained"
+    createdAt: number
+  }>
+}
+
+export type GithubKeysListResponse = GithubKeysListResponses[keyof GithubKeysListResponses]
+
+export type GithubKeysCreateData = {
+  body?: {
+    name: string
+    token: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/keys"
+}
+
+export type GithubKeysCreateErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubKeysCreateError = GithubKeysCreateErrors[keyof GithubKeysCreateErrors]
+
+export type GithubKeysCreateResponses = {
+  /**
+   * Created key
+   */
+  200: GithubKey
+}
+
+export type GithubKeysCreateResponse = GithubKeysCreateResponses[keyof GithubKeysCreateResponses]
+
+export type GithubKeysDeleteData = {
+  body?: never
+  path: {
+    keyID: string
+  }
+  query?: {
+    directory?: string
+  }
+  url: "/github/keys/{keyID}"
+}
+
+export type GithubKeysDeleteErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubKeysDeleteError = GithubKeysDeleteErrors[keyof GithubKeysDeleteErrors]
+
+export type GithubKeysDeleteResponses = {
+  /**
+   * Key deleted
+   */
+  200: boolean
+}
+
+export type GithubKeysDeleteResponse = GithubKeysDeleteResponses[keyof GithubKeysDeleteResponses]
+
+export type GithubReposListData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    keyID: string
+    query?: string
+    page?: number
+    perPage?: number
+  }
+  url: "/github/repos"
+}
+
+export type GithubReposListErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubReposListError = GithubReposListErrors[keyof GithubReposListErrors]
+
+export type GithubReposListResponses = {
+  /**
+   * List of repositories
+   */
+  200: Array<{
+    id: number
+    name: string
+    full_name: string
+    description: string | null
+    private: boolean
+    default_branch: string
+    updated_at: string | null
+  }>
+}
+
+export type GithubReposListResponse = GithubReposListResponses[keyof GithubReposListResponses]
+
+export type GithubReposBranchesData = {
+  body?: never
+  path: {
+    owner: string
+    repo: string
+  }
+  query: {
+    directory?: string
+    keyID: string
+    query?: string
+    perPage?: number
+  }
+  url: "/github/repos/{owner}/{repo}/branches"
+}
+
+export type GithubReposBranchesErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubReposBranchesError = GithubReposBranchesErrors[keyof GithubReposBranchesErrors]
+
+export type GithubReposBranchesResponses = {
+  /**
+   * List of branches
+   */
+  200: Array<{
+    name: string
+    protected: boolean
+  }>
+}
+
+export type GithubReposBranchesResponse = GithubReposBranchesResponses[keyof GithubReposBranchesResponses]
+
+export type GithubCloneData = {
+  body?: {
+    keyID: string
+    owner: string
+    repo: string
+    branch?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/clone"
+}
+
+export type GithubCloneErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubCloneError = GithubCloneErrors[keyof GithubCloneErrors]
+
+export type GithubCloneResponses = {
+  /**
+   * Clone result
+   */
+  200: {
+    path: string
+  }
+}
+
+export type GithubCloneResponse = GithubCloneResponses[keyof GithubCloneResponses]
+
+export type GithubRemoteInfoData = {
+  body?: never
+  path?: never
+  query: {
+    directory: string
+  }
+  url: "/github/remote-info"
+}
+
+export type GithubRemoteInfoErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubRemoteInfoError = GithubRemoteInfoErrors[keyof GithubRemoteInfoErrors]
+
+export type GithubRemoteInfoResponses = {
+  /**
+   * Remote info
+   */
+  200: {
+    url: string
+    owner: string
+    repo: string
+    isHttps: boolean
+  }
+}
+
+export type GithubRemoteInfoResponse = GithubRemoteInfoResponses[keyof GithubRemoteInfoResponses]
+
+export type GithubStatusData = {
+  body?: never
+  path?: never
+  query: {
+    directory: string
+  }
+  url: "/github/status"
+}
+
+export type GithubStatusErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubStatusError = GithubStatusErrors[keyof GithubStatusErrors]
+
+export type GithubStatusResponses = {
+  /**
+   * Git status
+   */
+  200: {
+    branch?: string
+    changesCount: number
+    isClean: boolean
+  }
+}
+
+export type GithubStatusResponse = GithubStatusResponses[keyof GithubStatusResponses]
+
+export type GithubPushData = {
+  body?: {
+    keyID: string
+    directory: string
+    message?: string
+    branchName?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/push"
+}
+
+export type GithubPushErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubPushError = GithubPushErrors[keyof GithubPushErrors]
+
+export type GithubPushResponses = {
+  /**
+   * Push result
+   */
+  200: {
+    branch: string
+    sha: string
+    success: boolean
+  }
+}
+
+export type GithubPushResponse = GithubPushResponses[keyof GithubPushResponses]
+
+export type GithubPullRequestsGetData = {
+  body?: never
+  path?: never
+  query: {
+    directory: string
+    keyID: string
+    headBranch?: string
+  }
+  url: "/github/pull-requests"
+}
+
+export type GithubPullRequestsGetErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubPullRequestsGetError = GithubPullRequestsGetErrors[keyof GithubPullRequestsGetErrors]
+
+export type GithubPullRequestsGetResponses = {
+  /**
+   * PR info
+   */
+  200: {
+    number: number
+    url: string
+    title: string
+    state: "open" | "closed"
+  }
+}
+
+export type GithubPullRequestsGetResponse = GithubPullRequestsGetResponses[keyof GithubPullRequestsGetResponses]
+
+export type GithubPullRequestsCreateData = {
+  body?: {
+    keyID: string
+    directory: string
+    title: string
+    body?: string
+    baseBranch: string
+    headBranch?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/pull-requests"
+}
+
+export type GithubPullRequestsCreateErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubPullRequestsCreateError = GithubPullRequestsCreateErrors[keyof GithubPullRequestsCreateErrors]
+
+export type GithubPullRequestsCreateResponses = {
+  /**
+   * PR created
+   */
+  200: {
+    number: number
+    url: string
+    title: string
+  }
+}
+
+export type GithubPullRequestsCreateResponse =
+  GithubPullRequestsCreateResponses[keyof GithubPullRequestsCreateResponses]
+
 export type FindTextData = {
   body?: never
   path?: never
@@ -4036,14 +4406,20 @@ export type FindTextResponse = FindTextResponses[keyof FindTextResponses]
 export type FindFilesData = {
   body?: never
   path?: never
-  query: {
+  query?: {
     directory?: string
-    query: string
-    dirs?: "true" | "false"
+    query?: string
     type?: "file" | "directory"
     limit?: number
   }
   url: "/find/file"
+}
+
+export type FindFilesErrors = {
+  /**
+   * Directory not found
+   */
+  404: unknown
 }
 
 export type FindFilesResponses = {
@@ -4054,6 +4430,28 @@ export type FindFilesResponses = {
 }
 
 export type FindFilesResponse = FindFilesResponses[keyof FindFilesResponses]
+
+export type SearchFilesData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    query: string
+    dirs?: "true" | "false"
+    type?: "file" | "directory"
+    limit?: number
+  }
+  url: "/search/file"
+}
+
+export type SearchFilesResponses = {
+  /**
+   * File paths
+   */
+  200: Array<string>
+}
+
+export type SearchFilesResponse = SearchFilesResponses[keyof SearchFilesResponses]
 
 export type FindSymbolsData = {
   body?: never

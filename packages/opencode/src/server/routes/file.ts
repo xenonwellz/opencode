@@ -5,6 +5,7 @@ import { File } from "../../file"
 import { Ripgrep } from "../../file/ripgrep"
 import { LSP } from "../../lsp"
 import { Instance } from "../../project/instance"
+import { Global } from "../../global"
 import { lazy } from "../../util/lazy"
 
 export const FileRoutes = lazy(() =>
@@ -46,8 +47,83 @@ export const FileRoutes = lazy(() =>
       "/find/file",
       describeRoute({
         summary: "Find files",
-        description: "Search for files or directories by name or pattern in the project directory.",
+        description: "List files or directories in a directory, optionally filtered by name. Pass / or ~ for home directory.",
         operationId: "find.files",
+        responses: {
+          200: {
+            description: "File paths",
+            content: {
+              "application/json": {
+                schema: resolver(z.string().array()),
+              },
+            },
+          },
+          404: {
+            description: "Directory not found",
+          },
+        },
+      }),
+      validator(
+        "query",
+        z.object({
+          directory: z.string().optional().default("~"),
+          query: z.string().optional().default(""),
+          type: z.enum(["file", "directory"]).optional(),
+          limit: z.coerce.number().int().min(1).max(200).optional().default(100),
+        }),
+      ),
+      async (c) => {
+        let { directory, query, type, limit } = c.req.valid("query")
+        const lowerQuery = query.toLowerCase()
+
+        // Resolve / or ~ to user home directory
+        if (directory === "/" || directory === "~") {
+          directory = Global.Path.home
+        } else if (directory.startsWith("~/")) {
+          directory = Global.Path.home + directory.slice(1)
+        }
+
+        // List directory entries
+        const entries = await import("fs").then(fs =>
+          fs.promises.readdir(directory, { withFileTypes: true }).catch(() => null)
+        )
+
+        if (!entries) {
+          return c.json({ error: "Directory not found" }, 404)
+        }
+
+        // Filter and map entries (FLAT LISTING ONLY)
+        const results: string[] = []
+        for (const entry of entries) {
+          // Skip hidden files/folders
+          if (entry.name.startsWith(".")) continue
+
+          // Filter by type
+          if (type === "file" && !entry.isFile()) continue
+          if (type === "directory" && !entry.isDirectory()) continue
+
+          // Filter by query (name contains)
+          if (lowerQuery && !entry.name.toLowerCase().includes(lowerQuery)) continue
+
+          // Add trailing slash for directories
+          const name = entry.isDirectory() ? entry.name + "/" : entry.name
+          results.push(name)
+
+          if (results.length >= limit) break
+        }
+
+        // Sort alphabetically
+        results.sort((a, b) => a.localeCompare(b))
+
+        return c.json(results)
+      },
+    )
+    .get(
+      "/search/file",
+      describeRoute({
+        summary: "Search files in project",
+        description: "Search for files or directories by name or pattern in the project directory.",
+        operationId: "search.files",
         responses: {
           200: {
             description: "File paths",
