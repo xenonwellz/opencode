@@ -171,10 +171,15 @@ export const GitActions: Component<GitActionsProps> = (props) => {
             } else {
                 throw new Error("Failed to create PR")
             }
-        } catch (error) {
+        } catch (error: any) {
+            let errorMessage = String(error)
+            if (errorMessage.includes("Resource not accessible by personal access token")) {
+                errorMessage = "GitHub token does not have permission to create pull requests. Please ensure your token has the 'repo' scope (for classic tokens) or 'Pull requests: Read & write' (for fine-grained tokens)."
+            }
+            
             showToast({
                 title: "Failed to create PR",
-                description: String(error),
+                description: errorMessage,
             })
         } finally {
             setCreatingPR(false)

@@ -876,7 +876,6 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
 
     async function handleClone(repo: Repo, branch?: string) {
         const owner = repo.full_name.split("/")[0]
-        const baseBranch = branch ?? repo.default_branch
 
         try {
             // @ts-ignore - SDK will be regenerated
@@ -889,19 +888,16 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
 
             if (response.data?.path) {
                 const projectPath = response.data.path
-                const workingBranch = `opencode/${baseBranch}`
-
-                // Create working branch for OpenCode changes
-                try {
-                    // @ts-ignore - SDK will be regenerated
-                    await globalSDK.client.github.branch.create({
-                        keyID: props.keyID,
-                        directory: projectPath,
-                        name: workingBranch,
-                    })
-                } catch {
-                    // Branch might already exist, ignore error
-                }
+                
+                // Get the actual branch info from the project after clone
+                const status = await globalSDK.client.github.status({ directory: projectPath })
+                const currentBranch = status.data?.branch || "main"
+                
+                // If it's an opencode/ branch, determine the base branch
+                const workingBranch = currentBranch
+                const baseBranch = workingBranch.startsWith("opencode/") 
+                    ? workingBranch.slice("opencode/".length).replace(/-[a-z0-9]{4}-[a-z0-9]{4}$/, "")
+                    : branch ?? repo.default_branch
 
                 // Register this project in GitHub projects storage
                 githubProjects.register({
@@ -916,8 +912,8 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
                 showToast({
                     variant: "success",
                     icon: "circle-check",
-                    title: language.t("dialog.project.clone.success.title"),
-                    description: `Cloned ${repo.full_name} and created branch ${workingBranch}`,
+                    title: "Repository cloned",
+                    description: `Cloned ${repo.full_name} to ${workingBranch}`,
                 })
                 dialog.close()
                 props.onSelect(projectPath)

@@ -343,6 +343,21 @@ export const GithubRoutes = lazy(() => {
             return c.json({ error: "Failed to clone repository" }, { status: 400 })
           }
 
+          // Create opencode working branch
+          try {
+            const baseBranch = branch || (await Git.getCurrentBranch(targetDir))
+            if (baseBranch) {
+              const u1 = Math.random().toString(36).slice(2, 6)
+              const u2 = Math.random().toString(36).slice(2, 6)
+              const workingBranch = `opencode/${baseBranch}-${u1}-${u2}`
+              await Git.checkoutBranch(targetDir, workingBranch, true)
+              log.info("Created working branch", { branch: workingBranch, directory: targetDir })
+            }
+          } catch (e) {
+            log.error("Failed to create working branch after clone", { error: e })
+            // We don't fail the whole clone if branching fails, but log it
+          }
+
           return c.json({ path: targetDir })
         } catch (error) {
           log.error("Failed to clone repo", { error })

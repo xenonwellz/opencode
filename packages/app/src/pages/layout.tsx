@@ -2019,8 +2019,8 @@ export default function Layout(props: ParentProps) {
         type="button"
         aria-label={projectName()}
         classList={{
-          "flex items-center justify-center size-10 p-1 rounded-lg overflow-hidden transition-colors cursor-default": true,
-          "bg-transparent border-2 border-icon-strong-base hover:bg-surface-base-hover": selected(),
+          "box-border rounded-lg overflow-hidden transition-colors cursor-pointer": true,
+          "bg-transparent border border-icon-strong-base hover:bg-surface-base-hover": selected(),
           "bg-transparent border border-transparent hover:bg-surface-base-hover hover:border-border-weak-base":
             !selected() && !open(),
           "bg-surface-base-hover border border-border-weak-base": !selected() && open(),
@@ -2028,7 +2028,9 @@ export default function Layout(props: ParentProps) {
         onClick={() => navigateToProject(props.project.worktree)}
         onBlur={() => setOpen(false)}
       >
-        <ProjectIcon project={props.project} notify />
+        <span class="flex border-4 border-transparent">
+          <ProjectIcon project={props.project} notify />
+        </span>
       </button>
     )
 
@@ -2254,13 +2256,13 @@ export default function Layout(props: ParentProps) {
                     </div>
                   }
                 >
-                  <IconButton
-                    icon="plus"
-                    variant="ghost"
-                    size="large"
-                    onClick={chooseProject}
-                    aria-label={language.t("command.project.open")}
-                  />
+                  <IconButton icon="plus" variant="ghost" size="large" class="border border-border-weak-base cursor-pointer" onClick={chooseProject} />
+                </Tooltip>
+                <Tooltip
+                  placement={sidebarProps.mobile ? "bottom" : "right"}
+                  value="Home"
+                >
+                  <IconButton icon="home" variant="ghost" size="large" class="border border-border-weak-base cursor-pointer" onClick={() => navigate("/")} />
                 </Tooltip>
               </div>
               <DragOverlay>
