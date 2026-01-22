@@ -149,6 +149,7 @@ export const dict = {
   "common.default": "Standard",
   "common.attachment": "Anhang",
   "common.back": "Zurück",
+  "common.open": "Öffnen",
 
   "prompt.placeholder.shell": "Shell-Befehl eingeben...",
   "prompt.placeholder.normal": 'Fragen Sie alles... "{{example}}"',
@@ -219,6 +220,10 @@ export const dict = {
   "dialog.directory.search.placeholder": "Ordner durchsuchen",
   "dialog.directory.empty": "Keine Ordner gefunden",
   "dialog.directory.back": "Zurück zu den Anbietern",
+  "dialog.directory.error.not_found.title": "Ordner nicht gefunden",
+  "dialog.directory.error.not_found.description": "Ordner \"{path}\" existiert nicht oder ist nicht zugänglich.",
+  "dialog.directory.error.failed.title": "Ordner konnte nicht geöffnet werden",
+  "dialog.directory.error.failed.description": "Beim Überprüfen des Ordners ist ein Fehler aufgetreten.",
 
   "dialog.server.title": "Server",
   "dialog.server.description": "Wechseln Sie den OpenCode-Server, mit dem sich diese App verbindet.",
@@ -295,6 +300,7 @@ export const dict = {
   "dialog.project.clone.moments": "Dies kann einige Momente dauern",
   "dialog.project.clone.success.title": "Repository geklont",
   "dialog.project.clone.success.description": "{{name}} erfolgreich geklont",
+  "dialog.project.clone.success.description_with_branch": "{{name}} nach {{branch}} geklont",
   "dialog.project.clone.error.title": "Fehler beim Klonen des Repositorys",
   "dialog.project.select_branch.title": "Branch auswählen",
   "dialog.project.select_branch.search.placeholder": "Branches suchen",

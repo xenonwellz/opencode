@@ -145,6 +145,7 @@ export const dict = {
   "common.default": "Predeterminado",
   "common.attachment": "adjunto",
   "common.back": "Atrás",
+  "common.open": "Abrir",
 
   "prompt.placeholder.shell": "Introduce comando de shell...",
   "prompt.placeholder.normal": 'Pregunta cualquier cosa... "{{example}}"',
@@ -214,6 +215,10 @@ export const dict = {
   "dialog.directory.search.placeholder": "Buscar carpetas",
   "dialog.directory.empty": "No se encontraron carpetas",
   "dialog.directory.back": "Volver a proveedores",
+  "dialog.directory.error.not_found.title": "Carpeta no encontrada",
+  "dialog.directory.error.not_found.description": "La carpeta \"{path}\" no existe o es inaccesible.",
+  "dialog.directory.error.failed.title": "Error al abrir carpeta",
+  "dialog.directory.error.failed.description": "Ocurrió un error al verificar la carpeta.",
 
   "dialog.server.title": "Servidores",
   "dialog.server.description": "Cambiar a qué servidor de OpenCode se conecta esta app.",
@@ -290,6 +295,7 @@ export const dict = {
   "dialog.project.clone.moments": "Esto puede tomar unos momentos",
   "dialog.project.clone.success.title": "Repositorio clonado",
   "dialog.project.clone.success.description": "{{name}} clonado exitosamente",
+  "dialog.project.clone.success.description_with_branch": "{{name}} clonado a {{branch}}",
   "dialog.project.clone.error.title": "Error al clonar el repositorio",
   "dialog.project.select_branch.title": "Seleccionar rama",
   "dialog.project.select_branch.search.placeholder": "Buscar ramas",

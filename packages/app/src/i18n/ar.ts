@@ -163,6 +163,7 @@ export const dict = {
   "common.default": "افتراضي",
   "common.attachment": "مرفق",
   "common.back": "العودة",
+  "common.open": "فتح",
 
   "prompt.placeholder.shell": "أدخل أمر shell...",
   "prompt.placeholder.normal": 'اسأل أي شيء... "{{example}}"',
@@ -232,6 +233,10 @@ export const dict = {
   "dialog.directory.search.placeholder": "البحث في المجلدات",
   "dialog.directory.empty": "لم يتم العثور على مجلدات",
   "dialog.directory.back": "العودة إلى الموفرين",
+  "dialog.directory.error.not_found.title": "لم يتم العثور على المجلد",
+  "dialog.directory.error.not_found.description": "المجلد \"{path}\" غير موجود أو لا يمكن الوصول إليه.",
+  "dialog.directory.error.failed.title": "فشل في فتح المجلد",
+  "dialog.directory.error.failed.description": "حدث خطأ أثناء التحقق من المجلد.",
 
   "dialog.server.title": "الخوادم",
   "dialog.server.description": "تبديل خادم OpenCode الذي يتصل به هذا التطبيق.",
@@ -308,6 +313,7 @@ export const dict = {
   "dialog.project.clone.moments": "قد يستغرق هذا بعض الوقت",
   "dialog.project.clone.success.title": "تم استنساخ المستودع",
   "dialog.project.clone.success.description": "تم استنساخ {{name}} بنجاح",
+  "dialog.project.clone.success.description_with_branch": "تم استنساخ {{name}} إلى {{branch}}",
   "dialog.project.clone.error.title": "خطأ في استنساخ المستودع",
   "dialog.project.select_branch.title": "اختيار الفرع",
   "dialog.project.select_branch.search.placeholder": "البحث عن الفروع",

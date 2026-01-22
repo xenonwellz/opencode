@@ -163,6 +163,7 @@ export const dict = {
   "common.default": "Domyślny",
   "common.attachment": "załącznik",
   "common.back": "Wstecz",
+  "common.open": "Otwórz",
 
   "prompt.placeholder.shell": "Wpisz polecenie terminala...",
   "prompt.placeholder.normal": 'Zapytaj o cokolwiek... "{{example}}"',
@@ -232,6 +233,10 @@ export const dict = {
   "dialog.directory.search.placeholder": "Szukaj folderów",
   "dialog.directory.empty": "Nie znaleziono folderów",
   "dialog.directory.back": "Powrót do dostawców",
+  "dialog.directory.error.not_found.title": "Folder nie znaleziony",
+  "dialog.directory.error.not_found.description": "Folder \"{path}\" nie istnieje lub jest niedostępny.",
+  "dialog.directory.error.failed.title": "Nie udało się otworzyć folderu",
+  "dialog.directory.error.failed.description": "Wystąpił błąd podczas weryfikacji folderu.",
 
   "dialog.server.title": "Serwery",
   "dialog.server.description": "Przełącz serwer OpenCode, z którym łączy się ta aplikacja.",
@@ -308,6 +313,7 @@ export const dict = {
   "dialog.project.clone.moments": "Może to zająć kilka chwil",
   "dialog.project.clone.success.title": "Repozytorium sklonowane",
   "dialog.project.clone.success.description": "{{name}} pomyślnie sklonowane",
+  "dialog.project.clone.success.description_with_branch": "{{name}} sklonowane do {{branch}}",
   "dialog.project.clone.error.title": "Błąd podczas klonowania repozytorium",
   "dialog.project.select_branch.title": "Wybierz gałąź",
   "dialog.project.select_branch.search.placeholder": "Szukaj gałęzi",

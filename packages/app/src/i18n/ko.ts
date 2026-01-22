@@ -148,6 +148,7 @@ export const dict = {
   "common.default": "기본값",
   "common.attachment": "첨부 파일",
   "common.back": "뒤로",
+  "common.open": "열기",
 
   "prompt.placeholder.shell": "셸 명령어 입력...",
   "prompt.placeholder.normal": '무엇이든 물어보세요... "{{example}}"',
@@ -217,6 +218,10 @@ export const dict = {
   "dialog.directory.search.placeholder": "폴더 검색",
   "dialog.directory.empty": "폴더 없음",
   "dialog.directory.back": "공급자로 돌아가기",
+  "dialog.directory.error.not_found.title": "폴더를 찾을 수 없습니다",
+  "dialog.directory.error.not_found.description": "폴더 \"{path}\"이(가) 존재하지 않거나 액세스할 수 없습니다.",
+  "dialog.directory.error.failed.title": "폴더 열기 실패",
+  "dialog.directory.error.failed.description": "폴더를 확인하는 동안 오류가 발생했습니다.",
 
   "dialog.server.title": "서버",
   "dialog.server.description": "이 앱이 연결할 OpenCode 서버를 전환합니다.",
@@ -290,6 +295,7 @@ export const dict = {
   "dialog.project.clone.moments": "잠시 시간이 걸릴 수 있습니다",
   "dialog.project.clone.success.title": "리포지토리 복제됨",
   "dialog.project.clone.success.description": "{{name}}을(를) 성공적으로 복제했습니다",
+  "dialog.project.clone.success.description_with_branch": "{{name}}을(를) {{branch}}에 복제했습니다",
   "dialog.project.clone.error.title": "리포지토리 복제 실패",
   "dialog.project.select_branch.title": "브랜치 선택",
   "dialog.project.select_branch.search.placeholder": "브랜치 검색",

@@ -166,6 +166,7 @@ export const dict = {
   "common.default": "Standard",
   "common.attachment": "vedlegg",
   "common.back": "Tilbake",
+  "common.open": "Åpne",
 
   "prompt.placeholder.shell": "Skriv inn shell-kommando...",
   "prompt.placeholder.normal": 'Spør om hva som helst... "{{example}}"',
@@ -235,6 +236,10 @@ export const dict = {
   "dialog.directory.search.placeholder": "Søk etter mapper",
   "dialog.directory.empty": "Ingen mapper funnet",
   "dialog.directory.back": "Tilbake til leverandører",
+  "dialog.directory.error.not_found.title": "Mappe ikke funnet",
+  "dialog.directory.error.not_found.description": "Mappen \"{path}\" eksisterer ikke eller er utilgjengelig.",
+  "dialog.directory.error.failed.title": "Kunne ikke åpne mappe",
+  "dialog.directory.error.failed.description": "Det oppstod en feil under verifisering av mappen.",
 
   "dialog.server.title": "Servere",
   "dialog.server.description": "Bytt hvilken OpenCode-server denne appen kobler til.",
@@ -311,6 +316,7 @@ export const dict = {
   "dialog.project.clone.moments": "Dette kan ta noen øyeblikk",
   "dialog.project.clone.success.title": "Repository klonet",
   "dialog.project.clone.success.description": "{{name}} ble klonet",
+  "dialog.project.clone.success.description_with_branch": "{{name}} ble klonet til {{branch}}",
   "dialog.project.clone.error.title": "Feil ved kloning av repository",
   "dialog.project.select_branch.title": "Velg gren",
   "dialog.project.select_branch.search.placeholder": "Søk grener",

@@ -145,6 +145,7 @@ export const dict = {
   "common.default": "默认",
   "common.attachment": "附件",
   "common.back": "返回",
+  "common.open": "打开",
 
   "prompt.placeholder.shell": "输入 shell 命令...",
   "prompt.placeholder.normal": '随便问点什么... "{{example}}"',
@@ -214,6 +215,10 @@ export const dict = {
   "dialog.directory.search.placeholder": "搜索文件夹",
   "dialog.directory.empty": "未找到文件夹",
   "dialog.directory.back": "返回提供商列表",
+  "dialog.directory.error.not_found.title": "文件夹未找到",
+  "dialog.directory.error.not_found.description": "文件夹\"{path}\"不存在或无法访问。",
+  "dialog.directory.error.failed.title": "打开文件夹失败",
+  "dialog.directory.error.failed.description": "验证文件夹时发生错误。",
 
   "dialog.server.title": "服务器",
   "dialog.server.description": "切换此应用连接的 OpenCode 服务器。",
@@ -286,6 +291,7 @@ export const dict = {
   "dialog.project.clone.moments": "这可能需要几分钟",
   "dialog.project.clone.success.title": "仓库已克隆",
   "dialog.project.clone.success.description": "成功克隆 {{name}}",
+  "dialog.project.clone.success.description_with_branch": "已将 {{name}} 克隆到 {{branch}}",
   "dialog.project.clone.error.title": "克隆仓库失败",
   "dialog.project.select_branch.title": "选择分支",
   "dialog.project.select_branch.search.placeholder": "搜索分支",

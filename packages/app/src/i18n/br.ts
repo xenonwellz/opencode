@@ -163,6 +163,7 @@ export const dict = {
   "common.default": "Padrão",
   "common.attachment": "anexo",
   "common.back": "Voltar",
+  "common.open": "Abrir",
 
   "prompt.placeholder.shell": "Digite comando do shell...",
   "prompt.placeholder.normal": 'Pergunte qualquer coisa... "{{example}}"',
@@ -232,6 +233,10 @@ export const dict = {
   "dialog.directory.search.placeholder": "Buscar pastas",
   "dialog.directory.empty": "Nenhuma pasta encontrada",
   "dialog.directory.back": "Voltar para provedores",
+  "dialog.directory.error.not_found.title": "Pasta não encontrada",
+  "dialog.directory.error.not_found.description": "A pasta \"{path}\" não existe ou é inacessível.",
+  "dialog.directory.error.failed.title": "Falha ao abrir pasta",
+  "dialog.directory.error.failed.description": "Ocorreu um erro ao verificar a pasta.",
 
   "dialog.server.title": "Servidores",
   "dialog.server.description": "Trocar para qual servidor OpenCode este aplicativo se conecta.",
@@ -308,6 +313,7 @@ export const dict = {
   "dialog.project.clone.moments": "Isso pode levar alguns momentos",
   "dialog.project.clone.success.title": "Repositório clonado",
   "dialog.project.clone.success.description": "{{name}} clonado com sucesso",
+  "dialog.project.clone.success.description_with_branch": "{{name}} clonado para {{branch}}",
   "dialog.project.clone.error.title": "Erro ao clonar o repositório",
   "dialog.project.select_branch.title": "Selecionar branch",
   "dialog.project.select_branch.search.placeholder": "Buscar branches",

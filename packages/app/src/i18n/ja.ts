@@ -144,6 +144,7 @@ export const dict = {
   "common.default": "デフォルト",
   "common.attachment": "添付ファイル",
   "common.back": "戻る",
+  "common.open": "開く",
 
   "prompt.placeholder.shell": "シェルコマンドを入力...",
   "prompt.placeholder.normal": '何でも聞いてください... "{{example}}"',
@@ -213,6 +214,10 @@ export const dict = {
   "dialog.directory.search.placeholder": "フォルダを検索",
   "dialog.directory.empty": "フォルダが見つかりません",
   "dialog.directory.back": "プロバイダーに戻る",
+  "dialog.directory.error.not_found.title": "フォルダが見つかりません",
+  "dialog.directory.error.not_found.description": "フォルダ \"{path}\" が存在しないか、アクセスできません。",
+  "dialog.directory.error.failed.title": "フォルダを開くのに失敗しました",
+  "dialog.directory.error.failed.description": "フォルダの検証中にエラーが発生しました。",
 
   "dialog.server.title": "サーバー",
   "dialog.server.description": "このアプリが接続するOpenCodeサーバーを切り替えます。",
@@ -286,6 +291,7 @@ export const dict = {
   "dialog.project.clone.moments": "これには数分かかる場合があります",
   "dialog.project.clone.success.title": "リポジトリがクローンされました",
   "dialog.project.clone.success.description": "{{name}} のクローンに成功しました",
+  "dialog.project.clone.success.description_with_branch": "{{name}} を {{branch}} にクローンしました",
   "dialog.project.clone.error.title": "リポジトリのクローンに失敗しました",
   "dialog.project.select_branch.title": "ブランチを選択",
   "dialog.project.select_branch.search.placeholder": "ブランチを検索",

@@ -163,6 +163,7 @@ export const dict = {
   "common.default": "Default",
   "common.attachment": "attachment",
   "common.back": "Back",
+  "common.open": "Open",
 
   "prompt.placeholder.shell": "Enter shell command...",
   "prompt.placeholder.normal": 'Ask anything... "{{example}}"',
@@ -232,6 +233,10 @@ export const dict = {
   "dialog.directory.search.placeholder": "Search folders",
   "dialog.directory.empty": "No folders found",
   "dialog.directory.back": "Back to providers",
+  "dialog.directory.error.not_found.title": "Folder not found",
+  "dialog.directory.error.not_found.description": "Folder \"{path}\" does not exist or is inaccessible.",
+  "dialog.directory.error.failed.title": "Failed to open folder",
+  "dialog.directory.error.failed.description": "An error occurred while verifying the folder.",
 
   "dialog.server.title": "Servers",
   "dialog.server.description": "Switch which OpenCode server this app connects to.",
@@ -308,6 +313,7 @@ export const dict = {
   "dialog.project.clone.moments": "This may take a few moments",
   "dialog.project.clone.success.title": "Repository cloned",
   "dialog.project.clone.success.description": "Successfully cloned {{name}}",
+  "dialog.project.clone.success.description_with_branch": "Cloned {{name}} to {{branch}}",
   "dialog.project.clone.error.title": "Failed to clone repository",
   "dialog.project.select_branch.title": "Select branch",
   "dialog.project.select_branch.search.placeholder": "Search branches",

@@ -566,7 +566,7 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
         
         // Only show navigation items when not searching
         if (!searchQuery) {
-            items.push({ id: "__back__", type: "back", name: "Back to providers", label: "Back to providers" })
+            items.push({ id: "__back__", type: "back", name: language.t("dialog.directory.back"), label: language.t("dialog.directory.back") })
             if (!isAtRoot()) {
                 items.push({ id: "__parent__", type: "parent", name: "..", label: ".." })
             }
@@ -698,8 +698,8 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
                 showToast({
                     variant: "error",
                     icon: "circle-x",
-                    title: "Folder not found",
-                    description: `Folder "${path}" does not exist or is inaccessible.`,
+                    title: language.t("dialog.directory.error.not_found.title"),
+                    description: language.t("dialog.directory.error.not_found.description", { path }),
                 })
             } else {
                 openAsProject(path)
@@ -708,8 +708,8 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
             showToast({
                 variant: "error",
                 icon: "circle-x",
-                title: "Failed to open folder",
-                description: "An error occurred while verifying the folder.",
+                title: language.t("dialog.directory.error.failed.title"),
+                description: language.t("dialog.directory.error.failed.description"),
             })
         } finally {
             setOpenLoading(false)
@@ -724,8 +724,8 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
     return (
         <Dialog title={props.title ?? language.t("dialog.project.open.title")}>
             <List
-                search={{ placeholder: "Search folders", autofocus: true }}
-                emptyMessage="No folders found"
+                search={{ placeholder: language.t("dialog.directory.search.placeholder"), autofocus: true }}
+                emptyMessage={language.t("dialog.directory.empty")}
                 items={fetchItems}
                 filterKeys={["label", "name"]}
                 key={(item) => item.id + currentPath()}
@@ -764,7 +764,7 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
                                     if (item.path) openDirectoryAsProject(item.path)
                                 }}
                             >
-                                Open
+                                {language.t("common.open")}
                             </Button>
                         </Show>
                     </div>
@@ -789,7 +789,7 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
                     />
                 </div>
                 <Button variant="primary" class="h-9" onClick={handleOpenPath} disabled={openLoading()}>
-                    <Show when={openLoading()} fallback="Open">
+                    <Show when={openLoading()} fallback={language.t("common.open")}>
                         <Spinner class="size-4" />
                     </Show>
                 </Button>
@@ -912,8 +912,8 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
                 showToast({
                     variant: "success",
                     icon: "circle-check",
-                    title: "Repository cloned",
-                    description: `Cloned ${repo.full_name} to ${workingBranch}`,
+                    title: language.t("dialog.project.clone.success.title"),
+                    description: language.t("dialog.project.clone.success.description_with_branch", { name: repo.full_name, branch: workingBranch }),
                 })
                 dialog.close()
                 props.onSelect(projectPath)
@@ -935,8 +935,8 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
             description={language.t("dialog.project.select_repo.description", { name: props.keyName })}
         >
             <List
-                search={{ placeholder: "Search repositories", autofocus: true }}
-                emptyMessage={store.error ? "" : "No repositories found"}
+                search={{ placeholder: language.t("dialog.project.select_repo.search.placeholder"), autofocus: true }}
+                emptyMessage={store.error ? "" : language.t("dialog.project.select_repo.empty")}
                 items={fetchRepos}
                 filterKeys={["name", "full_name"]}
                 key={(x) => (typeof x.id === "number" ? x.id.toString() : x.id)}
@@ -1143,8 +1143,8 @@ function DialogSelectGithubBranch(props: {
                 </div>
             </Show>
             <List
-                search={{ placeholder: "Search branches", autofocus: true }}
-                emptyMessage={store.error ? "" : "No branches found"}
+                search={{ placeholder: language.t("dialog.project.select_branch.search.placeholder"), autofocus: true }}
+                emptyMessage={store.error ? "" : language.t("dialog.project.select_branch.empty")}
                 items={fetchBranches}
                 filterKeys={["name"]}
                 key={(x) => x.id ?? x.name}

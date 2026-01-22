@@ -147,6 +147,7 @@ export const dict = {
   "common.default": "預設",
   "common.attachment": "附件",
   "common.back": "返回",
+  "common.open": "開啟",
 
   "prompt.placeholder.shell": "輸入 shell 命令...",
   "prompt.placeholder.normal": '隨便問點什麼... "{{example}}"',
@@ -216,6 +217,10 @@ export const dict = {
   "dialog.directory.search.placeholder": "搜尋資料夾",
   "dialog.directory.empty": "找不到資料夾",
   "dialog.directory.back": "返回提供者清單",
+  "dialog.directory.error.not_found.title": "找不到資料夾",
+  "dialog.directory.error.not_found.description": "資料夾\"{path}\"不存在或無法存取。",
+  "dialog.directory.error.failed.title": "開啟資料夾失敗",
+  "dialog.directory.error.failed.description": "驗證資料夾時發生錯誤。",
 
   "dialog.server.title": "伺服器",
   "dialog.server.description": "切換此應用程式連線的 OpenCode 伺服器。",
@@ -288,6 +293,7 @@ export const dict = {
   "dialog.project.clone.moments": "這可能需要幾分鐘",
   "dialog.project.clone.success.title": "倉庫已克隆",
   "dialog.project.clone.success.description": "成功克隆 {{name}}",
+  "dialog.project.clone.success.description_with_branch": "已將 {{name}} 克隆到 {{branch}}",
   "dialog.project.clone.error.title": "克隆倉庫失敗",
   "dialog.project.select_branch.title": "選擇分支",
   "dialog.project.select_branch.search.placeholder": "搜尋分支",

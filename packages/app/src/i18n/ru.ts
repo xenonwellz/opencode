@@ -163,6 +163,7 @@ export const dict = {
   "common.default": "По умолчанию",
   "common.attachment": "вложение",
   "common.back": "Назад",
+  "common.open": "Открыть",
 
   "prompt.placeholder.shell": "Введите команду оболочки...",
   "prompt.placeholder.normal": 'Спросите что угодно... "{{example}}"',
@@ -232,6 +233,10 @@ export const dict = {
   "dialog.directory.search.placeholder": "Поиск папок",
   "dialog.directory.empty": "Папки не найдены",
   "dialog.directory.back": "Назад к провайдерам",
+  "dialog.directory.error.not_found.title": "Папка не найдена",
+  "dialog.directory.error.not_found.description": "Папка \"{path}\" не существует или недоступна.",
+  "dialog.directory.error.failed.title": "Не удалось открыть папку",
+  "dialog.directory.error.failed.description": "Произошла ошибка при проверке папки.",
 
   "dialog.server.title": "Серверы",
   "dialog.server.description": "Переключите сервер OpenCode к которому подключается приложение.",
@@ -308,6 +313,7 @@ export const dict = {
   "dialog.project.clone.moments": "Это может занять несколько мгновений",
   "dialog.project.clone.success.title": "Репозиторий клонирован",
   "dialog.project.clone.success.description": "{{name}} успешно клонирован",
+  "dialog.project.clone.success.description_with_branch": "{{name}} клонирован в {{branch}}",
   "dialog.project.clone.error.title": "Ошибка клонирования репозитория",
   "dialog.project.select_branch.title": "Выбрать ветку",
   "dialog.project.select_branch.search.placeholder": "Поиск веток",

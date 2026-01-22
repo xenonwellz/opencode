@@ -145,6 +145,7 @@ export const dict = {
   "common.default": "Défaut",
   "common.attachment": "pièce jointe",
   "common.back": "Retour",
+  "common.open": "Ouvrir",
 
   "prompt.placeholder.shell": "Entrez une commande shell...",
   "prompt.placeholder.normal": 'Demandez n\'importe quoi... "{{example}}"',
@@ -214,6 +215,10 @@ export const dict = {
   "dialog.directory.search.placeholder": "Rechercher des dossiers",
   "dialog.directory.empty": "Aucun dossier trouvé",
   "dialog.directory.back": "Retour aux fournisseurs",
+  "dialog.directory.error.not_found.title": "Dossier introuvable",
+  "dialog.directory.error.not_found.description": "Le dossier \"{path}\" n'existe pas ou est inaccessible.",
+  "dialog.directory.error.failed.title": "Échec de l'ouverture du dossier",
+  "dialog.directory.error.failed.description": "Une erreur s'est produite lors de la vérification du dossier.",
 
   "dialog.server.title": "Serveurs",
   "dialog.server.description": "Changez le serveur OpenCode auquel cette application se connecte.",
@@ -290,6 +295,7 @@ export const dict = {
   "dialog.project.clone.moments": "Cela peut prendre quelques instants",
   "dialog.project.clone.success.title": "Dépôt cloné",
   "dialog.project.clone.success.description": "{{name}} cloné avec succès",
+  "dialog.project.clone.success.description_with_branch": "{{name}} cloné vers {{branch}}",
   "dialog.project.clone.error.title": "Erreur lors du clonage du dépôt",
   "dialog.project.select_branch.title": "Sélectionner une branche",
   "dialog.project.select_branch.search.placeholder": "Rechercher des branches",
