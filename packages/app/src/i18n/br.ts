@@ -322,9 +322,6 @@ export const dict = {
   "dialog.project.select_branch.default": "Usar branch padrão ({{branch}})",
   "dialog.project.select_branch.protected": "Protegido",
   "dialog.project.select_branch.loading": "Carregando branches...",
-  "dialog.project.edit.worktree.startup": "Script de inicialização do espaço de trabalho",
-  "dialog.project.edit.worktree.startup.description": "Executa após criar um novo espaço de trabalho (worktree).",
-  "dialog.project.edit.worktree.startup.placeholder": "ex: bun install",
 
   "context.breakdown.title": "Detalhamento do Contexto",
   "context.breakdown.note":
