@@ -28,6 +28,7 @@ import type {
   FilePartSource,
   FileReadResponses,
   FileStatusResponses,
+  FindFilesErrors,
   FindFilesResponses,
   FindSymbolsResponses,
   FindTextResponses,
@@ -112,6 +113,7 @@ import type {
   QuestionRejectResponses,
   QuestionReplyErrors,
   QuestionReplyResponses,
+  SearchFilesResponses,
   SessionAbortErrors,
   SessionAbortResponses,
   SessionChildrenErrors,
@@ -2516,13 +2518,12 @@ export class Find extends HeyApiClient {
   /**
    * Find files
    *
-   * Search for files or directories by name or pattern in the project directory.
+   * List files or directories in a directory, optionally filtered by name. Pass / or ~ for home directory.
    */
   public files<ThrowOnError extends boolean = false>(
-    parameters: {
+    parameters?: {
       directory?: string
-      query: string
-      dirs?: "true" | "false"
+      query?: string
       type?: "file" | "directory"
       limit?: number
     },
@@ -2535,14 +2536,13 @@ export class Find extends HeyApiClient {
           args: [
             { in: "query", key: "directory" },
             { in: "query", key: "query" },
-            { in: "query", key: "dirs" },
             { in: "query", key: "type" },
             { in: "query", key: "limit" },
           ],
         },
       ],
     )
-    return (options?.client ?? this.client).get<FindFilesResponses, unknown, ThrowOnError>({
+    return (options?.client ?? this.client).get<FindFilesResponses, FindFilesErrors, ThrowOnError>({
       url: "/find/file",
       ...options,
       ...params,
@@ -2574,6 +2574,44 @@ export class Find extends HeyApiClient {
     )
     return (options?.client ?? this.client).get<FindSymbolsResponses, unknown, ThrowOnError>({
       url: "/find/symbol",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Search extends HeyApiClient {
+  /**
+   * Search files in project
+   *
+   * Search for files or directories by name or pattern in the project directory.
+   */
+  public files<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      query: string
+      dirs?: "true" | "false"
+      type?: "file" | "directory"
+      limit?: number
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "query" },
+            { in: "query", key: "dirs" },
+            { in: "query", key: "type" },
+            { in: "query", key: "limit" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<SearchFilesResponses, unknown, ThrowOnError>({
+      url: "/search/file",
       ...options,
       ...params,
     })
@@ -3594,6 +3632,11 @@ export class OpencodeClient extends HeyApiClient {
   private _find?: Find
   get find(): Find {
     return (this._find ??= new Find({ client: this.client }))
+  }
+
+  private _search?: Search
+  get search(): Search {
+    return (this._search ??= new Search({ client: this.client }))
   }
 
   private _file?: File

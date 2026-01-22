@@ -494,27 +494,7 @@ export default function Layout(props: ParentProps) {
     ),
   )
 
-  createEffect(
-    on(
-      () => ({ ready: pageReady(), layoutReady: layoutReady(), dir: params.dir, list: layout.projects.list() }),
-      (value) => {
-        if (!value.ready) return
-        if (!value.layoutReady) return
-        if (!autoselect()) return
-        if (initialDir) return
-        if (value.dir) return
-        if (value.list.length === 0) return
-
-        const last = server.projects.last()
-        const next = value.list.find((project) => project.worktree === last) ?? value.list[0]
-        if (!next) return
-        setAutoselect(false)
-        openProject(next.worktree, false)
-        navigateToProject(next.worktree)
-      },
-      { defer: true },
-    ),
-  )
+  // Auto-navigation from home removed - user stays on home screen until they choose a project
 
   const workspaceKey = (directory: string) => directory.replace(/[\\/]+$/, "")
 

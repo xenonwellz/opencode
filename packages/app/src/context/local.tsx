@@ -469,9 +469,9 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           .catch(() => {})
       }
 
-      const searchFiles = (query: string) => sdk.client.find.files({ query, dirs: "false" }).then((x) => x.data!)
+      const searchFiles = (query: string) => sdk.client.search.files({ query, dirs: "false" }).then((x) => x.data!)
       const searchFilesAndDirectories = (query: string) =>
-        sdk.client.find.files({ query, dirs: "true" }).then((x) => x.data!)
+        sdk.client.search.files({ query, dirs: "true" }).then((x) => x.data!)
 
       const unsub = sdk.event.listen((e) => {
         const event = e.details

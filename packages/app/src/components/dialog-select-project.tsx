@@ -8,7 +8,7 @@ import { Spinner } from "@opencode-ai/ui/spinner"
 import { TextField } from "@opencode-ai/ui/text-field"
 import { showToast } from "@opencode-ai/ui/toast"
 import { getDirectory, getFilename } from "@opencode-ai/util/path"
-import { Show, createMemo, onMount } from "solid-js"
+import { Show, For, createMemo, createSignal, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobalSDK } from "@/context/global-sdk"
 import { useGlobalSync } from "@/context/global-sync"
@@ -271,6 +271,7 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
                         search={{ placeholder: language.t("dialog.project.search.placeholder"), autofocus: true }}
                         emptyMessage={language.t("dialog.project.empty")}
                         items={allItems}
+                        filterKeys={["name", "description"]}
                         key={(x) => x.id}
                         onSelect={(provider) => {
                             if (provider) handleSelect(provider)
@@ -360,6 +361,7 @@ function DialogSelectProjectProviderType(props: { onBack: () => void }) {
             <List
                 search={{ placeholder: language.t("dialog.project.search.placeholder"), autofocus: true }}
                 items={items}
+                filterKeys={["name"]}
                 key={(x) => x.id}
                 onSelect={(item) => {
                     if (!item) return
@@ -535,64 +537,106 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
     const language = useLanguage()
 
     const home = createMemo(() => sync.data.path.home)
-    const root = createMemo(() => sync.data.path.home || sync.data.path.directory)
+    const [currentPath, setCurrentPath] = createSignal<string>("")
 
-    function join(base: string | undefined, rel: string) {
-        const b = (base ?? "").replace(/[\\/]+$/, "")
-        const r = rel.replace(/^[\\/]+/, "").replace(/[\\/]+$/, "")
-        if (!b) return r
-        if (!r) return b
-        return b + "/" + r
-    }
-
-    function display(rel: string) {
-        const full = join(root(), rel)
+    // Check if we're at the root (home) level
+    const isAtRoot = createMemo(() => currentPath() === "")
+    
+    // Get the full absolute path
+    const absolutePath = createMemo(() => {
         const h = home()
-        if (!h) return full
-        if (full === h) return "~"
-        if (full.startsWith(h + "/") || full.startsWith(h + "\\")) {
-            return "~" + full.slice(h.length)
-        }
-        return full
-    }
+        const rel = currentPath()
+        if (!h) return rel
+        if (!rel) return h
+        return h + "/" + rel
+    })
 
-    function normalizeQuery(query: string) {
-        const h = home()
+    // Display path (with ~ prefix)
+    const displayPath = createMemo(() => {
+        const rel = currentPath()
+        if (!rel) return "~"
+        return "~/" + rel
+    })
 
-        if (!query) return query
-        if (query.startsWith("~/")) return query.slice(2)
+    // Build list items - back, parent (..), and folders
+    type FolderListItem = { id: string; type: "back" | "parent" | "folder"; path?: string; name: string; label: string }
 
-        if (h) {
-            const lc = query.toLowerCase()
-            const hc = h.toLowerCase()
-            if (lc === hc || lc.startsWith(hc + "/") || lc.startsWith(hc + "\\")) {
-                return query.slice(h.length).replace(/^[\\/]+/, "")
+    async function fetchItems(searchQuery: string): Promise<FolderListItem[]> {
+        const items: FolderListItem[] = []
+        
+        // Only show navigation items when not searching
+        if (!searchQuery) {
+            items.push({ id: "__back__", type: "back", name: "Back to providers", label: "Back to providers" })
+            if (!isAtRoot()) {
+                items.push({ id: "__parent__", type: "parent", name: "..", label: ".." })
             }
         }
 
-        return query
+        // Use displayPath which uses ~/ prefix that backend understands
+        const directory = displayPath()
+
+        try {
+            // API now returns direct children only, filtered by query
+            const result = await sdk.client.find.files({ 
+                directory, 
+                query: searchQuery || undefined, 
+                type: "directory", 
+                limit: 100 
+            })
+            
+            // Check for 404 error
+            if (result.error) {
+                return items
+            }
+            
+            const folders = result.data ?? []
+            const absDir = absolutePath()
+            
+            for (const folder of folders) {
+                // Remove trailing slash
+                const name = folder.replace(/[\\/]+$/, "")
+                const absPath = absDir + "/" + name
+                
+                items.push({
+                    id: absPath,
+                    type: "folder",
+                    path: absPath,
+                    name: name,
+                    label: name,
+                })
+            }
+        } catch {
+            // Return just navigation items on error
+        }
+
+        return items
     }
 
-    async function fetchDirs(query: string) {
-        const directory = root()
-        if (!directory) return [] as string[]
-
-        const results = await sdk.client.find
-            .files({ directory, query, type: "directory", limit: 50 })
-            .then((x) => x.data ?? [])
-            .catch(() => [])
-
-        return results.map((x) => x.replace(/[\\/]+$/, ""))
+    function navigateInto(folderPath: string) {
+        const h = home()
+        if (!h) return
+        
+        // Get relative path from home
+        const rel = folderPath.startsWith(h + "/") 
+            ? folderPath.slice(h.length + 1) 
+            : folderPath.startsWith(h) 
+                ? folderPath.slice(h.length).replace(/^\//, "")
+                : folderPath
+        
+        setCurrentPath(rel)
     }
 
-    const directories = async (filter: string) => {
-        const query = normalizeQuery(filter.trim())
-        return fetchDirs(query)
+    function navigateUp() {
+        const rel = currentPath()
+        if (!rel) return
+        
+        const parts = rel.split("/")
+        parts.pop()
+        setCurrentPath(parts.join("/"))
     }
 
-    function resolve(rel: string) {
-        const absolute = join(root(), rel)
-        props.onSelect(props.multiple ? [absolute] : absolute)
+    function openAsProject(folderPath: string) {
+        props.onSelect(props.multiple ? [folderPath] : folderPath)
         dialog.close()
     }
 
@@ -608,62 +652,148 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
         ))
     }
 
-    type DirectoryListItem = BackItem | string
+    function handleSelect(item: FolderListItem) {
+        if (item.type === "back") {
+            handleGoBack()
+        } else if (item.type === "parent") {
+            navigateUp()
+        } else if (item.path) {
+            navigateInto(item.path)
+        }
+    }
 
-    async function directoriesWithBack(filter: string): Promise<DirectoryListItem[]> {
-        const backItem: BackItem = { id: "__back__", name: language.t("dialog.directory.back"), type: "back" }
-        const dirs = await directories(filter)
-        return [backItem, ...dirs]
+    // Handle path input change
+    function handlePathInput(value: string) {
+        if (value === "/" || value === "~") {
+            setCurrentPath("")
+            return
+        }
+
+        // Ensure path always starts with ~/ conceptually
+        let cleanPath = value
+        if (value.startsWith("~/")) {
+            cleanPath = value.slice(2)
+        } else if (value.startsWith("/")) {
+            cleanPath = value.slice(1)
+        }
+        setCurrentPath(cleanPath)
+    }
+
+    const [openLoading, setOpenLoading] = createSignal(false)
+
+    // Consolidate opening logic with verification
+    async function openDirectoryAsProject(path: string) {
+        if (!path || openLoading()) return
+
+        setOpenLoading(true)
+        try {
+            // Verify directory exists and we can access it
+            const result = await sdk.client.find.files({
+                directory: path.startsWith("/") ? path : "~/" + (path.startsWith("~/") ? path.slice(2) : path),
+                type: "directory",
+                limit: 1
+            })
+
+            if (result.error) {
+                showToast({
+                    variant: "error",
+                    icon: "circle-x",
+                    title: "Folder not found",
+                    description: `Folder "${path}" does not exist or is inaccessible.`,
+                })
+            } else {
+                openAsProject(path)
+            }
+        } catch {
+            showToast({
+                variant: "error",
+                icon: "circle-x",
+                title: "Failed to open folder",
+                description: "An error occurred while verifying the folder.",
+            })
+        } finally {
+            setOpenLoading(false)
+        }
+    }
+
+    // Check if path exists and open or show error
+    function handleOpenPath() {
+        openDirectoryAsProject(absolutePath())
     }
 
     return (
         <Dialog title={props.title ?? language.t("dialog.project.open.title")}>
             <List
-                search={{ placeholder: language.t("dialog.directory.search.placeholder"), autofocus: true }}
-                emptyMessage={language.t("dialog.directory.empty")}
-                items={directoriesWithBack}
-                key={(x) => (x as BackItem).id ?? (x as string)}
-                onSelect={(item) => {
-                    if (!item) return
-                    const backItem = item as BackItem
-                    if (backItem.id === "__back__") {
-                        handleGoBack()
-                        return
-                    }
-                    resolve(item as string)
-                }}
+                search={{ placeholder: "Search folders", autofocus: true }}
+                emptyMessage="No folders found"
+                items={fetchItems}
+                filterKeys={["label", "name"]}
+                key={(item) => item.id + currentPath()}
+                onSelect={(item) => item && handleSelect(item)}
             >
-                {(item) => {
-                    const backItem = item as BackItem
-                    if (backItem.id === "__back__") {
-                        return (
-                            <div class="w-full flex items-center justify-between rounded-md">
-                                <div class="flex items-center gap-x-3 grow min-w-0">
-                                    <Icon name="arrow-left" class="shrink-0 size-4 text-text-weak" />
-                                    <div class="flex flex-col items-start text-left min-w-0">
-                                        <span class="text-14-regular text-text-strong truncate">{backItem.name}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )
-                    }
-                    const rel = item as string
-                    const path = display(rel)
-                    return (
-                        <div class="w-full flex items-center justify-between rounded-md">
-                            <div class="flex items-center gap-x-3 grow min-w-0">
-                                <FileIcon node={{ path: rel, type: "directory" }} class="shrink-0 size-4" />
-                                <div class="flex items-center text-14-regular min-w-0">
-                                    <span class="text-text-weak whitespace-nowrap overflow-hidden overflow-ellipsis truncate min-w-0">
-                                        {getDirectory(path)}
-                                    </span>
-                                    <span class="text-text-strong whitespace-nowrap">{getFilename(path)}</span>
-                                </div>
-                            </div>
+                {(item) => (
+                    <div
+                        class="w-full flex items-center justify-between rounded-md"
+                        onDblClick={() => {
+                            if (item.type === "folder" && item.path) {
+                                openDirectoryAsProject(item.path)
+                            }
+                        }}
+                    >
+                        <div class="flex items-center gap-x-3 grow min-w-0">
+                            <Show when={item.type === "back"}>
+                                <Icon name="arrow-left" class="shrink-0 size-4 text-text-weak" />
+                            </Show>
+                            <Show when={item.type === "parent"}>
+                                <Icon name="folder" class="shrink-0 size-4 text-text-weak" />
+                            </Show>
+                            <Show when={item.type === "folder"}>
+                                <FileIcon node={{ path: item.path ?? "", type: "directory" }} class="shrink-0 size-4" />
+                            </Show>
+                            <span class="text-14-regular text-text-strong truncate">{item.name}</span>
                         </div>
-                    )
-                }}
+                        
+                        {/* Open button (visible after leaving root, only for folders) */}
+                        <Show when={!isAtRoot() && item.type === "folder" && item.path}>
+                            <Button
+                                variant="ghost"
+                                size="small"
+                                disabled={openLoading()}
+                                onClick={(e: MouseEvent) => {
+                                    e.stopPropagation()
+                                    if (item.path) openDirectoryAsProject(item.path)
+                                }}
+                            >
+                                Open
+                            </Button>
+                        </Show>
+                    </div>
+                )}
             </List>
+
+            {/* Footer: Path input with Open button */}
+            <div class="flex items-center gap-2 px-3 py-2 border-t border-border-base">
+                <div class="flex-1 flex items-center h-9 bg-surface-subtle-base rounded-md border border-border-base focus-within:border-border-focus-base">
+                    <span class="pl-3 text-14-regular text-text-weak font-mono select-none">~/</span>
+                    <input
+                        type="text"
+                        value={currentPath()}
+                        onInput={(e) => handlePathInput(e.currentTarget.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                handleOpenPath()
+                            }
+                        }}
+                        disabled={openLoading()}
+                        class="flex-1 h-full bg-transparent px-1 text-14-regular text-text-strong font-mono outline-none disabled:opacity-50"
+                    />
+                </div>
+                <Button variant="primary" class="h-9" onClick={handleOpenPath} disabled={openLoading()}>
+                    <Show when={openLoading()} fallback="Open">
+                        <Spinner class="size-4" />
+                    </Show>
+                </Button>
+            </div>
         </Dialog>
     )
 }
@@ -683,7 +813,7 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
 
     const [store, setStore] = createStore({
         repos: [] as Repo[],
-        loading: true,
+        loading: false,
         loadingMore: false,
         error: undefined as string | undefined,
         page: 1,
@@ -694,8 +824,10 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
     async function fetchRepos(query: string): Promise<RepoListItem[]> {
         const backItem: BackItem = { id: "__back__", name: language.t("dialog.directory.back"), type: "back" }
 
+        setStore("loading", true)
+        setStore("query", query)
+
         try {
-            // @ts-ignore - SDK will be regenerated
             const response = await globalSDK.client.github.repos.list({
                 keyID: props.keyID,
                 query: query || undefined,
@@ -710,9 +842,11 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
 
             setStore("repos", repos)
             setStore("error", undefined)
+            setStore("loading", false)
             return [backItem, ...repos]
         } catch (e) {
             setStore("error", String(e))
+            setStore("loading", false)
             return [backItem]
         }
     }
@@ -805,9 +939,10 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
             description={language.t("dialog.project.select_repo.description", { name: props.keyName })}
         >
             <List
-                search={{ placeholder: language.t("dialog.project.select_repo.search.placeholder"), autofocus: true }}
-                emptyMessage={language.t("dialog.project.select_repo.empty")}
+                search={{ placeholder: "Search repositories", autofocus: true }}
+                emptyMessage={store.error ? "" : "No repositories found"}
                 items={fetchRepos}
+                filterKeys={["name", "full_name"]}
                 key={(x) => (typeof x.id === "number" ? x.id.toString() : x.id)}
                 onSelect={(item) => {
                     if (!item) return
@@ -1012,9 +1147,10 @@ function DialogSelectGithubBranch(props: {
                 </div>
             </Show>
             <List
-                search={{ placeholder: language.t("dialog.project.select_branch.search.placeholder"), autofocus: true }}
-                emptyMessage={language.t("dialog.project.select_branch.empty")}
+                search={{ placeholder: "Search branches", autofocus: true }}
+                emptyMessage={store.error ? "" : "No branches found"}
                 items={fetchBranches}
+                filterKeys={["name"]}
                 key={(x) => x.id ?? x.name}
                 onSelect={(item) => {
                     if (!item) return
@@ -1067,6 +1203,12 @@ function DialogSelectGithubBranch(props: {
                     <span class="text-14-regular text-text-weak">
                         {language.t("dialog.project.select_branch.loading")}
                     </span>
+                </div>
+            </Show>
+            <Show when={store.error && !store.loading}>
+                <div class="flex items-start gap-2 p-3 bg-surface-critical-base rounded-md border border-border-critical-base mx-3 mb-2">
+                    <Icon name="circle-x" class="shrink-0 size-4 text-icon-critical-base mt-0.5" />
+                    <span class="text-14-regular text-text-critical-base">{String(store.error)}</span>
                 </div>
             </Show>
         </Dialog>

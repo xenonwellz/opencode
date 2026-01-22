@@ -4406,14 +4406,20 @@ export type FindTextResponse = FindTextResponses[keyof FindTextResponses]
 export type FindFilesData = {
   body?: never
   path?: never
-  query: {
+  query?: {
     directory?: string
-    query: string
-    dirs?: "true" | "false"
+    query?: string
     type?: "file" | "directory"
     limit?: number
   }
   url: "/find/file"
+}
+
+export type FindFilesErrors = {
+  /**
+   * Directory not found
+   */
+  404: unknown
 }
 
 export type FindFilesResponses = {
@@ -4424,6 +4430,28 @@ export type FindFilesResponses = {
 }
 
 export type FindFilesResponse = FindFilesResponses[keyof FindFilesResponses]
+
+export type SearchFilesData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    query: string
+    dirs?: "true" | "false"
+    type?: "file" | "directory"
+    limit?: number
+  }
+  url: "/search/file"
+}
+
+export type SearchFilesResponses = {
+  /**
+   * File paths
+   */
+  200: Array<string>
+}
+
+export type SearchFilesResponse = SearchFilesResponses[keyof SearchFilesResponses]
 
 export type FindSymbolsData = {
   body?: never
