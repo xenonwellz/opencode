@@ -1694,7 +1694,10 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                   >
                     <div class="flex items-center gap-1.5">
                       <FileIcon node={{ path: item.path, type: "file" }} class="shrink-0 size-3.5" />
-                      <div class="flex items-center text-11-regular min-w-0">
+                      <div
+                        class="flex items-center text-11-regular min-w-0"
+                        style={{ "font-weight": "var(--font-weight-medium)" }}
+                      >
                         <span class="text-text-weak whitespace-nowrap truncate min-w-0">{getDirectory(item.path)}</span>
                         <span class="text-text-strong whitespace-nowrap">{getFilename(item.path)}</span>
                         <Show when={item.selection}>
@@ -1709,7 +1712,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       </div>
                       <IconButton
                         type="button"
-                        icon="close"
+                        icon="close-small"
                         variant="ghost"
                         class="h-5 w-5 opacity-0 group-hover:opacity-100"
                         onClick={(e) => {
