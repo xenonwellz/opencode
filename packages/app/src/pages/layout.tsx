@@ -2114,17 +2114,31 @@ export default function Layout(props: ParentProps) {
                 </For>
               </Show>
             </div>
-              <div class="px-2 py-2 border-t border-border-weak-base">
-                <Button
-                  variant="ghost"
-                  class="flex w-full text-left justify-start text-text-base px-2 hover:bg-transparent active:bg-transparent cursor-pointer"
-                  onClick={() => {
-                    navigate(`/${base64Encode(props.project.worktree)}/session`)
-                  }}
-                >
-                  {language.t("command.session.new")}
-                </Button>
-              </div>
+            <div class="px-2 py-2 border-t border-border-weak-base flex flex-col gap-1">
+              <Button
+                variant="ghost"
+                class="flex w-full text-left justify-start text-text-base px-2 hover:bg-transparent active:bg-transparent cursor-pointer"
+                onClick={() => {
+                  navigate(`/${base64Encode(props.project.worktree)}/session`)
+                }}
+              >
+                {language.t("command.session.new")}
+              </Button>
+              <Button
+                variant="ghost"
+                class="flex w-full text-left justify-start text-text-base px-2 hover:bg-transparent active:bg-transparent"
+                onClick={() => {
+                  layout.sidebar.open()
+                  if (selected()) {
+                    setOpen(false)
+                    return
+                  }
+                  navigateToProject(props.project.worktree)
+                }}
+              >
+                {language.t("sidebar.project.viewAllSessions")}
+              </Button>
+            </div>
           </div>
         </HoverCard>
       </div>
