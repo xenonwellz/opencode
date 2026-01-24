@@ -124,6 +124,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const local = useLocal()
   const files = useFile()
   const prompt = usePrompt()
+  const commentCount = createMemo(() => prompt.context.items().filter((item) => !!item.comment?.trim()).length)
   const layout = useLayout()
   const comments = useComments()
   const params = useParams()
@@ -1829,7 +1830,11 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
             aria-label={
               store.mode === "shell"
                 ? language.t("prompt.placeholder.shell")
-                : language.t("prompt.placeholder.normal", { example: language.t(EXAMPLES[store.placeholder]) })
+                : commentCount() > 1
+                  ? "Summarize comments…"
+                  : commentCount() === 1
+                    ? "Summarize comment…"
+                    : language.t("prompt.placeholder.normal", { example: language.t(EXAMPLES[store.placeholder]) })
             }
             contenteditable="true"
             onInput={handleInput}
@@ -1849,7 +1854,11 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
             <div class="absolute top-0 inset-x-0 p-3 pr-12 text-14-regular text-text-weak pointer-events-none whitespace-nowrap truncate">
               {store.mode === "shell"
                 ? language.t("prompt.placeholder.shell")
-                : language.t("prompt.placeholder.normal", { example: language.t(EXAMPLES[store.placeholder]) })}
+                : commentCount() > 1
+                  ? "Summarize comments…"
+                  : commentCount() === 1
+                    ? "Summarize comment…"
+                    : language.t("prompt.placeholder.normal", { example: language.t(EXAMPLES[store.placeholder]) })}
             </div>
           </Show>
         </div>
