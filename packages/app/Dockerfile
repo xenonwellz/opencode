@@ -19,7 +19,7 @@ FROM nginx:alpine
 COPY --from=builder /app/packages/app/dist /usr/share/nginx/html
 
 # Copy custom nginx configuration
-COPY packages/app/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/packages/app/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
