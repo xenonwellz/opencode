@@ -2,8 +2,12 @@ FROM oven/bun:latest AS builder
 
 WORKDIR /app
 
-# Copy the entire workspace
-COPY . .
+# Copy root configuration files (required for workspace catalogs)
+COPY package.json bun.lock bunfig.toml tsconfig.json ./
+COPY patches ./patches
+
+# Copy packages directory
+COPY packages ./packages
 
 # Install dependencies
 RUN bun install --frozen-lockfile
