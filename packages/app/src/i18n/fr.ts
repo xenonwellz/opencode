@@ -207,6 +207,9 @@ export const dict = {
   "dialog.mcp.description": "{{enabled}} sur {{total}} activés",
   "dialog.mcp.empty": "Aucun MCP configuré",
 
+  "dialog.lsp.empty": "LSPs détectés automatiquement par type de fichier",
+  "dialog.plugins.empty": "Plugins configurés dans opencode.json",
+
   "mcp.status.connected": "connecté",
   "mcp.status.failed": "échoué",
   "mcp.status.needs_auth": "nécessite auth",
@@ -231,7 +234,7 @@ export const dict = {
   "dialog.server.add.placeholder": "http://localhost:4096",
   "dialog.server.add.error": "Impossible de se connecter au serveur",
   "dialog.server.add.checking": "Vérification...",
-  "dialog.server.add.button": "Ajouter",
+  "dialog.server.add.button": "Ajouter un serveur",
   "dialog.server.default.title": "Serveur par défaut",
   "dialog.server.default.description":
     "Se connecter à ce serveur au lancement de l'application au lieu de démarrer un serveur local. Nécessite un redémarrage.",
@@ -239,6 +242,13 @@ export const dict = {
   "dialog.server.default.set": "Définir le serveur actuel comme défaut",
   "dialog.server.default.clear": "Effacer",
   "dialog.server.action.remove": "Supprimer le serveur",
+
+  "dialog.server.menu.edit": "Modifier",
+  "dialog.server.menu.default": "Définir par défaut",
+  "dialog.server.menu.defaultRemove": "Supprimer par défaut",
+  "dialog.server.menu.delete": "Supprimer",
+  "dialog.server.current": "Serveur actuel",
+  "dialog.server.status.default": "Défaut",
 
   "dialog.project.edit.title": "Modifier le projet",
   "dialog.project.edit.name": "Nom",
