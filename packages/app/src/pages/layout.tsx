@@ -2000,7 +2000,7 @@ export default function Layout(props: ParentProps) {
                     size="large"
                     onClick={(e: MouseEvent) => {
                       loadMore()
-                        ; (e.currentTarget as HTMLButtonElement).blur()
+                      ;(e.currentTarget as HTMLButtonElement).blur()
                     }}
                   >
                     {language.t("common.loadMore")}
@@ -2220,7 +2220,7 @@ export default function Layout(props: ParentProps) {
                 size="large"
                 onClick={(e: MouseEvent) => {
                   loadMore()
-                    ; (e.currentTarget as HTMLButtonElement).blur()
+                  ;(e.currentTarget as HTMLButtonElement).blur()
                 }}
               >
                 {language.t("common.loadMore")}
