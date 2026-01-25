@@ -90,11 +90,6 @@ export default function Layout(props: ParentProps) {
   const pageReady = createMemo(() => ready())
 
   let scrollContainerRef: HTMLDivElement | undefined
-  const xlQuery = window.matchMedia("(min-width: 1280px)")
-  const [isLargeViewport, setIsLargeViewport] = createSignal(xlQuery.matches)
-  const handleViewportChange = (e: MediaQueryListEvent) => setIsLargeViewport(e.matches)
-  xlQuery.addEventListener("change", handleViewportChange)
-  onCleanup(() => xlQuery.removeEventListener("change", handleViewportChange))
 
   const params = useParams()
   const [autoselect, setAutoselect] = createSignal(!params.dir)
@@ -530,8 +525,6 @@ export default function Layout(props: ParentProps) {
 
   const workspaceLabel = (directory: string, branch?: string, projectId?: string) =>
     workspaceName(directory, projectId, branch) ?? branch ?? getFilename(directory)
-
-  const isWorkspaceEditing = () => editor.active.startsWith("workspace:")
 
   const workspaceSetting = createMemo(() => {
     const project = currentProject()
@@ -2007,7 +2000,7 @@ export default function Layout(props: ParentProps) {
                     size="large"
                     onClick={(e: MouseEvent) => {
                       loadMore()
-                      ;(e.currentTarget as HTMLButtonElement).blur()
+                        ; (e.currentTarget as HTMLButtonElement).blur()
                     }}
                   >
                     {language.t("common.loadMore")}
@@ -2227,7 +2220,7 @@ export default function Layout(props: ParentProps) {
                 size="large"
                 onClick={(e: MouseEvent) => {
                   loadMore()
-                  ;(e.currentTarget as HTMLButtonElement).blur()
+                    ; (e.currentTarget as HTMLButtonElement).blur()
                 }}
               >
                 {language.t("common.loadMore")}
