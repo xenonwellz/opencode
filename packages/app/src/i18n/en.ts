@@ -137,6 +137,9 @@ export const dict = {
   "provider.connect.toast.connected.title": "{{provider}} connected",
   "provider.connect.toast.connected.description": "{{provider}} models are now available to use.",
 
+  "provider.disconnect.toast.disconnected.title": "{{provider}} disconnected",
+  "provider.disconnect.toast.disconnected.description": "{{provider}} models are no longer available.",
+
   "model.tag.free": "Free",
   "model.tag.latest": "Latest",
   "model.provider.anthropic": "Anthropic",
@@ -159,6 +162,8 @@ export const dict = {
   "common.loading": "Loading",
   "common.loading.ellipsis": "...",
   "common.cancel": "Cancel",
+  "common.connect": "Connect",
+  "common.disconnect": "Disconnect",
   "common.submit": "Submit",
   "common.save": "Save",
   "common.saving": "Saving...",
@@ -547,6 +552,7 @@ export const dict = {
   "sidebar.project.recentSessions": "Recent sessions",
 
   "settings.section.desktop": "Desktop",
+  "settings.section.server": "Server",
   "settings.tab.general": "General",
   "settings.tab.shortcuts": "Shortcuts",
 
@@ -655,6 +661,10 @@ export const dict = {
 
   "settings.providers.title": "Providers",
   "settings.providers.description": "Provider settings will be configurable here.",
+  "settings.providers.section.connected": "Connected providers",
+  "settings.providers.connected.empty": "No connected providers",
+  "settings.providers.section.popular": "Popular providers",
+  "settings.providers.tag.environment": "Environment",
   "settings.models.title": "Models",
   "settings.models.description": "Model settings will be configurable here.",
   "settings.agents.title": "Agents",
