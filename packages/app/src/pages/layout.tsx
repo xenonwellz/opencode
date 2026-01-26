@@ -351,7 +351,7 @@ export default function Layout(props: ParentProps) {
       const props = e.details.properties
       if (e.details.type === "permission.asked" && permission.autoResponds(e.details.properties, directory)) return
 
-      const [store] = globalSync.child(directory)
+      const [store] = globalSync.child(directory, { bootstrap: false })
       const session = store.session.find((s) => s.id === props.sessionID)
       const sessionKey = `${directory}:${props.sessionID}`
 
@@ -420,7 +420,7 @@ export default function Layout(props: ParentProps) {
         toastBySession.delete(sessionKey)
         alertedAtBySession.delete(sessionKey)
       }
-      const [store] = globalSync.child(currentDir)
+      const [store] = globalSync.child(currentDir, { bootstrap: false })
       const childSessions = store.session.filter((s) => s.parentID === currentSession)
       for (const child of childSessions) {
         const childKey = `${currentDir}:${child.id}`
@@ -434,17 +434,18 @@ export default function Layout(props: ParentProps) {
     })
   })
 
-  function sortSessions(a: Session, b: Session) {
-    const now = Date.now()
+  function sortSessions(now: number) {
     const oneMinuteAgo = now - 60 * 1000
-    const aUpdated = a.time.updated ?? a.time.created
-    const bUpdated = b.time.updated ?? b.time.created
-    const aRecent = aUpdated > oneMinuteAgo
-    const bRecent = bUpdated > oneMinuteAgo
-    if (aRecent && bRecent) return a.id.localeCompare(b.id)
-    if (aRecent && !bRecent) return -1
-    if (!aRecent && bRecent) return 1
-    return bUpdated - aUpdated
+    return (a: Session, b: Session) => {
+      const aUpdated = a.time.updated ?? a.time.created
+      const bUpdated = b.time.updated ?? b.time.created
+      const aRecent = aUpdated > oneMinuteAgo
+      const bRecent = bUpdated > oneMinuteAgo
+      if (aRecent && bRecent) return a.id.localeCompare(b.id)
+      if (aRecent && !bRecent) return -1
+      if (!aRecent && bRecent) return 1
+      return bUpdated - aUpdated
+    }
   }
 
   const [scrollSessionKey, setScrollSessionKey] = createSignal<string | undefined>(undefined)
@@ -476,7 +477,7 @@ export default function Layout(props: ParentProps) {
     const direct = projects.find((p) => p.worktree === directory)
     if (direct) return direct
 
-    const [child] = globalSync.child(directory)
+    const [child] = globalSync.child(directory, { bootstrap: false })
     const id = child.project
     if (!id) return
 
@@ -577,6 +578,7 @@ export default function Layout(props: ParentProps) {
   const currentSessions = createMemo(() => {
     const project = currentProject()
     if (!project) return [] as Session[]
+    const compare = sortSessions(Date.now())
     if (workspaceSetting()) {
       const dirs = workspaceIds(project)
       const activeDir = params.dir ? base64Decode(params.dir) : ""
@@ -589,7 +591,7 @@ export default function Layout(props: ParentProps) {
         const dirSessions = dirStore.session
           .filter((session) => session.directory === dirStore.path.directory)
           .filter((session) => !session.parentID && !session.time?.archived)
-          .toSorted(sortSessions)
+          .toSorted(compare)
         result.push(...dirSessions)
       }
       return result
@@ -598,7 +600,7 @@ export default function Layout(props: ParentProps) {
     return projectStore.session
       .filter((session) => session.directory === projectStore.path.directory)
       .filter((session) => !session.parentID && !session.time?.archived)
-      .toSorted(sortSessions)
+      .toSorted(compare)
   })
 
   type PrefetchQueue = {
@@ -640,7 +642,7 @@ export default function Layout(props: ParentProps) {
   }
 
   async function prefetchMessages(directory: string, sessionID: string, token: number) {
-    const [, setStore] = globalSync.child(directory)
+    const [, setStore] = globalSync.child(directory, { bootstrap: false })
 
     return retry(() => globalSDK.client.session.messages({ directory, sessionID, limit: prefetchChunk }))
       .then((messages) => {
@@ -698,7 +700,7 @@ export default function Layout(props: ParentProps) {
     const directory = session.directory
     if (!directory) return
 
-    const [store] = globalSync.child(directory)
+    const [store] = globalSync.child(directory, { bootstrap: false })
     const cached = untrack(() => store.message[session.id] !== undefined)
     if (cached) return
 
@@ -1798,7 +1800,7 @@ export default function Layout(props: ParentProps) {
       const directory = store.activeWorkspace
       if (!directory) return
 
-      const [workspaceStore] = globalSync.child(directory)
+      const [workspaceStore] = globalSync.child(directory, { bootstrap: false })
       const kind =
         directory === project.worktree ? language.t("workspace.type.local") : language.t("workspace.type.sandbox")
       const name = workspaceLabel(directory, workspaceStore.vcs?.branch, project.id)
@@ -1824,7 +1826,7 @@ export default function Layout(props: ParentProps) {
       workspaceStore.session
         .filter((session) => session.directory === workspaceStore.path.directory)
         .filter((session) => !session.parentID && !session.time?.archived)
-        .toSorted(sortSessions),
+        .toSorted(sortSessions(Date.now())),
     )
     const local = createMemo(() => props.directory === props.project.worktree)
     const active = createMemo(() => {
@@ -2029,7 +2031,7 @@ export default function Layout(props: ParentProps) {
     const [open, setOpen] = createSignal(false)
 
     const label = (directory: string) => {
-      const [data] = globalSync.child(directory)
+      const [data] = globalSync.child(directory, { bootstrap: false })
       const kind =
         directory === props.project.worktree ? language.t("workspace.type.local") : language.t("workspace.type.sandbox")
       const name = workspaceLabel(directory, data.vcs?.branch, props.project.id)
@@ -2037,20 +2039,23 @@ export default function Layout(props: ParentProps) {
     }
 
     const sessions = (directory: string) => {
-      const [data] = globalSync.child(directory)
+      const [data] = globalSync.child(directory, { bootstrap: false })
+      const root = workspaceKey(directory)
       return data.session
-        .filter((session) => session.directory === data.path.directory)
+        .filter((session) => workspaceKey(session.directory) === root)
         .filter((session) => !session.parentID && !session.time?.archived)
-        .toSorted(sortSessions)
+        .toSorted(sortSessions(Date.now()))
         .slice(0, 2)
     }
 
     const projectSessions = () => {
-      const [data] = globalSync.child(props.project.worktree)
+      const directory = props.project.worktree
+      const [data] = globalSync.child(directory, { bootstrap: false })
+      const root = workspaceKey(directory)
       return data.session
-        .filter((session) => session.directory === data.path.directory)
+        .filter((session) => workspaceKey(session.directory) === root)
         .filter((session) => !session.parentID && !session.time?.archived)
-        .toSorted(sortSessions)
+        .toSorted(sortSessions(Date.now()))
         .slice(0, 2)
     }
 
@@ -2188,7 +2193,7 @@ export default function Layout(props: ParentProps) {
       workspaceStore.session
         .filter((session) => session.directory === workspaceStore.path.directory)
         .filter((session) => !session.parentID && !session.time?.archived)
-        .toSorted(sortSessions),
+        .toSorted(sortSessions(Date.now())),
     )
     const loading = createMemo(() => workspaceStore.status !== "complete" && sessions().length === 0)
     const hasMore = createMemo(() => workspaceStore.sessionTotal > workspaceStore.session.length)
