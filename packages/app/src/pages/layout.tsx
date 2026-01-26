@@ -138,7 +138,7 @@ export default function Layout(props: ParentProps) {
   const [hoverSession, setHoverSession] = createSignal<string | undefined>()
   const [hoverProject, setHoverProject] = createSignal<string | undefined>()
 
-  const navRef = { current: undefined as HTMLElement | undefined }
+  const [nav, setNav] = createSignal<HTMLElement | undefined>(undefined)
 
   const sidebarHovering = createMemo(() => !layout.sidebar.opened() && hoverProject() !== undefined)
   const sidebarExpanded = createMemo(() => layout.sidebar.opened() || sidebarHovering())
@@ -1683,10 +1683,11 @@ export default function Layout(props: ParentProps) {
         >
           <HoverCard
             openDelay={1000}
-            closeDelay={0}
+            closeDelay={sidebarHovering() ? 300 : 0}
             placement="right"
             gutter={28}
             trigger={item}
+            mount={!props.mobile ? nav() : undefined}
             open={hoverSession() === props.session.id}
             onOpenChange={(open) => setHoverSession(open ? props.session.id : undefined)}
           >
@@ -1724,7 +1725,7 @@ export default function Layout(props: ParentProps) {
             "group-focus-within/session:opacity-100 group-focus-within/session:pointer-events-auto": true,
           }}
         >
-          <DropdownMenu open={menuOpen()} onOpenChange={setMenuOpen}>
+          <DropdownMenu modal={!sidebarHovering()} open={menuOpen()} onOpenChange={setMenuOpen}>
             <Tooltip value={language.t("common.moreOptions")} placement="top">
               <DropdownMenu.Trigger
                 as={IconButton}
@@ -1734,7 +1735,7 @@ export default function Layout(props: ParentProps) {
                 aria-label={language.t("common.moreOptions")}
               />
             </Tooltip>
-            <DropdownMenu.Portal mount={!props.mobile ? navRef.current : undefined}>
+            <DropdownMenu.Portal mount={!props.mobile ? nav() : undefined}>
               <DropdownMenu.Content
                 onCloseAutoFocus={(event) => {
                   if (!pendingRename()) return
@@ -1974,7 +1975,7 @@ export default function Layout(props: ParentProps) {
                     "group-focus-within/workspace:opacity-100 group-focus-within/workspace:pointer-events-auto": true,
                   }}
                 >
-                  <DropdownMenu open={menuOpen()} onOpenChange={setMenuOpen}>
+                  <DropdownMenu modal={!sidebarHovering()} open={menuOpen()} onOpenChange={setMenuOpen}>
                     <Tooltip value={language.t("common.moreOptions")} placement="top">
                       <DropdownMenu.Trigger
                         as={IconButton}
@@ -1984,7 +1985,7 @@ export default function Layout(props: ParentProps) {
                         aria-label={language.t("common.moreOptions")}
                       />
                     </Tooltip>
-                    <DropdownMenu.Portal mount={!props.mobile ? navRef.current : undefined}>
+                    <DropdownMenu.Portal mount={!props.mobile ? nav() : undefined}>
                       <DropdownMenu.Content
                         onCloseAutoFocus={(event) => {
                           if (!pendingRename()) return
@@ -2394,7 +2395,7 @@ export default function Layout(props: ParentProps) {
                     </Tooltip>
                   </div>
 
-                  <DropdownMenu>
+                  <DropdownMenu modal={!sidebarHovering()}>
                     <DropdownMenu.Trigger
                       as={IconButton}
                       icon="dot-grid"
@@ -2402,7 +2403,7 @@ export default function Layout(props: ParentProps) {
                       class="shrink-0 size-6 rounded-md opacity-0 group-hover/project:opacity-100 data-[expanded]:opacity-100 data-[expanded]:bg-surface-base-active"
                       aria-label={language.t("common.moreOptions")}
                     />
-                    <DropdownMenu.Portal mount={!panelProps.mobile ? navRef.current : undefined}>
+                    <DropdownMenu.Portal mount={!panelProps.mobile ? nav() : undefined}>
                       <DropdownMenu.Content class="mt-1">
                         <DropdownMenu.Item onSelect={() => dialog.show(() => <DialogEditProject project={p} />)}>
                           <DropdownMenu.ItemLabel>{language.t("common.edit")}</DropdownMenu.ItemLabel>
@@ -2652,7 +2653,7 @@ export default function Layout(props: ParentProps) {
           }}
           style={{ width: layout.sidebar.opened() ? `${Math.max(layout.sidebar.width(), 244)}px` : "64px" }}
           ref={(el) => {
-            navRef.current = el
+            setNav(el)
           }}
           onMouseLeave={() => {
             setHoverSession(undefined)
