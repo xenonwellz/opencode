@@ -329,7 +329,8 @@ export const dict = {
   "dialog.project.select_branch.loading": "Branches werden geladen...",
 
   "dialog.project.edit.worktree.startup": "Startup-Skript für Arbeitsbereich",
-  "dialog.project.edit.worktree.startup.description": "Wird nach dem Erstellen eines neuen Arbeitsbereichs (Worktree) ausgeführt.",
+  "dialog.project.edit.worktree.startup.description":
+    "Wird nach dem Erstellen eines neuen Arbeitsbereichs (Worktree) ausgeführt.",
   "dialog.project.edit.worktree.startup.placeholder": "z. B. bun install",
   "context.breakdown.title": "Kontext-Aufschlüsselung",
   "context.breakdown.note":
@@ -531,7 +532,8 @@ export const dict = {
   "terminal.close": "Terminal schließen",
 
   "terminal.connectionLost.title": "Verbindung verloren",
-  "terminal.connectionLost.description": "Die Terminalverbindung wurde unterbrochen. Das kann passieren, wenn der Server neu startet.",
+  "terminal.connectionLost.description":
+    "Die Terminalverbindung wurde unterbrochen. Das kann passieren, wenn der Server neu startet.",
   "common.closeTab": "Tab schließen",
   "common.dismiss": "Verwerfen",
   "common.requestFailed": "Anfrage fehlgeschlagen",

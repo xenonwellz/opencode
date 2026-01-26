@@ -324,7 +324,8 @@ export const dict = {
   "dialog.project.select_branch.loading": "Cargando ramas...",
 
   "dialog.project.edit.worktree.startup": "Script de inicio del espacio de trabajo",
-  "dialog.project.edit.worktree.startup.description": "Se ejecuta después de crear un nuevo espacio de trabajo (árbol de trabajo).",
+  "dialog.project.edit.worktree.startup.description":
+    "Se ejecuta después de crear un nuevo espacio de trabajo (árbol de trabajo).",
   "dialog.project.edit.worktree.startup.placeholder": "p. ej. bun install",
   "context.breakdown.title": "Desglose de Contexto",
   "context.breakdown.note":
@@ -525,7 +526,8 @@ export const dict = {
   "terminal.close": "Cerrar terminal",
 
   "terminal.connectionLost.title": "Conexión perdida",
-  "terminal.connectionLost.description": "La conexión del terminal se interrumpió. Esto puede ocurrir cuando el servidor se reinicia.",
+  "terminal.connectionLost.description":
+    "La conexión del terminal se interrumpió. Esto puede ocurrir cuando el servidor se reinicia.",
   "common.closeTab": "Cerrar pestaña",
   "common.dismiss": "Descartar",
   "common.requestFailed": "Solicitud fallida",

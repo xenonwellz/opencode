@@ -324,7 +324,8 @@ export const dict = {
   "dialog.project.select_branch.loading": "Chargement des branches...",
 
   "dialog.project.edit.worktree.startup": "Script de démarrage de l'espace de travail",
-  "dialog.project.edit.worktree.startup.description": "S'exécute après la création d'un nouvel espace de travail (arbre de travail).",
+  "dialog.project.edit.worktree.startup.description":
+    "S'exécute après la création d'un nouvel espace de travail (arbre de travail).",
   "dialog.project.edit.worktree.startup.placeholder": "p. ex. bun install",
   "context.breakdown.title": "Répartition du contexte",
   "context.breakdown.note":
@@ -530,7 +531,8 @@ export const dict = {
   "terminal.close": "Fermer le terminal",
 
   "terminal.connectionLost.title": "Connexion perdue",
-  "terminal.connectionLost.description": "La connexion au terminal a été interrompue. Cela peut arriver lorsque le serveur redémarre.",
+  "terminal.connectionLost.description":
+    "La connexion au terminal a été interrompue. Cela peut arriver lorsque le serveur redémarre.",
   "common.closeTab": "Fermer l'onglet",
   "common.dismiss": "Ignorer",
   "common.requestFailed": "La demande a échoué",
