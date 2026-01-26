@@ -1593,6 +1593,7 @@ export default function Layout(props: ParentProps) {
     mobile?: boolean
     dense?: boolean
     popover?: boolean
+    children?: Map<string, string[]>
   }): JSX.Element => {
     const notification = useNotification()
     const notifications = createMemo(() => notification.session.unseen(props.session.id))
@@ -1601,6 +1602,16 @@ export default function Layout(props: ParentProps) {
     const hasPermissions = createMemo(() => {
       const permissions = sessionStore.permission?.[props.session.id] ?? []
       if (permissions.length > 0) return true
+
+      const childIDs = props.children?.get(props.session.id)
+      if (childIDs) {
+        for (const id of childIDs) {
+          const childPermissions = sessionStore.permission?.[id] ?? []
+          if (childPermissions.length > 0) return true
+        }
+        return false
+      }
+
       const childSessions = sessionStore.session.filter((s) => s.parentID === props.session.id)
       for (const child of childSessions) {
         const childPermissions = sessionStore.permission?.[child.id] ?? []
@@ -1899,6 +1910,19 @@ export default function Layout(props: ParentProps) {
         .filter((session) => !session.parentID && !session.time?.archived)
         .toSorted(sortSessions(Date.now())),
     )
+    const children = createMemo(() => {
+      const map = new Map<string, string[]>()
+      for (const session of workspaceStore.session) {
+        if (!session.parentID) continue
+        const existing = map.get(session.parentID)
+        if (existing) {
+          existing.push(session.id)
+          continue
+        }
+        map.set(session.parentID, [session.id])
+      }
+      return map
+    })
     const local = createMemo(() => props.directory === props.project.worktree)
     const active = createMemo(() => {
       const current = params.dir ? base64Decode(params.dir) : ""
@@ -1912,10 +1936,9 @@ export default function Layout(props: ParentProps) {
     const open = createMemo(() => store.workspaceExpanded[props.directory] ?? local())
     const boot = createMemo(() => open() || active())
     const loading = createMemo(() => open() && workspaceStore.status !== "complete" && sessions().length === 0)
-    const hasMore = createMemo(() => local() && workspaceStore.sessionTotal > workspaceStore.session.length)
+    const hasMore = createMemo(() => workspaceStore.sessionTotal > sessions().length)
     const busy = createMemo(() => isBusy(props.directory))
     const loadMore = async () => {
-      if (!local()) return
       setWorkspaceStore("limit", (limit) => limit + 5)
       await globalSync.project.loadSessions(props.directory)
     }
@@ -2074,7 +2097,9 @@ export default function Layout(props: ParentProps) {
                 <SessionSkeleton />
               </Show>
               <For each={sessions()}>
-                {(session) => <SessionItem session={session} slug={slug()} mobile={props.mobile} />}
+                {(session) => (
+                  <SessionItem session={session} slug={slug()} mobile={props.mobile} children={children()} />
+                )}
               </For>
               <Show when={hasMore()}>
                 <div class="relative w-full py-1">
@@ -2291,8 +2316,21 @@ export default function Layout(props: ParentProps) {
         .filter((session) => !session.parentID && !session.time?.archived)
         .toSorted(sortSessions(Date.now())),
     )
+    const children = createMemo(() => {
+      const map = new Map<string, string[]>()
+      for (const session of workspaceStore.session) {
+        if (!session.parentID) continue
+        const existing = map.get(session.parentID)
+        if (existing) {
+          existing.push(session.id)
+          continue
+        }
+        map.set(session.parentID, [session.id])
+      }
+      return map
+    })
     const loading = createMemo(() => workspaceStore.status !== "complete" && sessions().length === 0)
-    const hasMore = createMemo(() => workspaceStore.sessionTotal > workspaceStore.session.length)
+    const hasMore = createMemo(() => workspaceStore.sessionTotal > sessions().length)
     const loadMore = async () => {
       setWorkspaceStore("limit", (limit) => limit + 5)
       await globalSync.project.loadSessions(props.project.worktree)
@@ -2311,7 +2349,7 @@ export default function Layout(props: ParentProps) {
             <SessionSkeleton />
           </Show>
           <For each={sessions()}>
-            {(session) => <SessionItem session={session} slug={slug()} mobile={props.mobile} />}
+            {(session) => <SessionItem session={session} slug={slug()} mobile={props.mobile} children={children()} />}
           </For>
           <Show when={hasMore()}>
             <div class="relative w-full py-1">
