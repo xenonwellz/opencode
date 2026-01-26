@@ -92,7 +92,6 @@ export default function Layout(props: ParentProps) {
   let scrollContainerRef: HTMLDivElement | undefined
 
   const params = useParams()
-  const [autoselect, setAutoselect] = createSignal(!params.dir)
   const globalSDK = useGlobalSDK()
   const globalSync = useGlobalSync()
   const layout = useLayout()
@@ -118,27 +117,31 @@ export default function Layout(props: ParentProps) {
   }
   const colorSchemeLabel = (scheme: ColorScheme) => language.t(colorSchemeKey[scheme])
 
+  const [state, setState] = createStore({
+    autoselect: !params.dir,
+    busyWorkspaces: new Set<string>(),
+    hoverSession: undefined as string | undefined,
+    hoverProject: undefined as string | undefined,
+    scrollSessionKey: undefined as string | undefined,
+    nav: undefined as HTMLElement | undefined,
+  })
+
   const [editor, setEditor] = createStore({
     active: "" as string,
     value: "",
   })
-  const [busyWorkspaces, setBusyWorkspaces] = createSignal<Set<string>>(new Set())
   const setBusy = (directory: string, value: boolean) => {
     const key = workspaceKey(directory)
-    setBusyWorkspaces((prev) => {
+    setState("busyWorkspaces", (prev) => {
       const next = new Set(prev)
       if (value) next.add(key)
       else next.delete(key)
       return next
     })
   }
-  const isBusy = (directory: string) => busyWorkspaces().has(workspaceKey(directory))
+  const isBusy = (directory: string) => state.busyWorkspaces.has(workspaceKey(directory))
   const editorRef = { current: undefined as HTMLInputElement | undefined }
 
-  const [hoverSession, setHoverSession] = createSignal<string | undefined>()
-  const [hoverProject, setHoverProject] = createSignal<string | undefined>()
-
-  const [nav, setNav] = createSignal<HTMLElement | undefined>(undefined)
   const navLeave = { current: undefined as number | undefined }
 
   onCleanup(() => {
@@ -146,18 +149,18 @@ export default function Layout(props: ParentProps) {
     clearTimeout(navLeave.current)
   })
 
-  const sidebarHovering = createMemo(() => !layout.sidebar.opened() && hoverProject() !== undefined)
+  const sidebarHovering = createMemo(() => !layout.sidebar.opened() && state.hoverProject !== undefined)
   const sidebarExpanded = createMemo(() => layout.sidebar.opened() || sidebarHovering())
 
   const hoverProjectData = createMemo(() => {
-    const id = hoverProject()
+    const id = state.hoverProject
     if (!id) return
     return layout.projects.list().find((project) => project.worktree === id)
   })
 
   createEffect(() => {
     if (!layout.sidebar.opened()) return
-    setHoverProject(undefined)
+    setState("hoverProject", undefined)
   })
 
   createEffect(
@@ -165,9 +168,9 @@ export default function Layout(props: ParentProps) {
       () => ({ dir: params.dir, id: params.id }),
       () => {
         if (layout.sidebar.opened()) return
-        if (!hoverProject()) return
-        setHoverSession(undefined)
-        setHoverProject(undefined)
+        if (!state.hoverProject) return
+        setState("hoverSession", undefined)
+        setState("hoverProject", undefined)
       },
       { defer: true },
     ),
@@ -176,7 +179,7 @@ export default function Layout(props: ParentProps) {
   const autoselecting = createMemo(() => {
     if (params.dir) return false
     if (initialDir) return false
-    if (!autoselect()) return false
+    if (!state.autoselect) return false
     if (!pageReady()) return true
     if (!layoutReady()) return true
     const list = layout.projects.list()
@@ -484,20 +487,18 @@ export default function Layout(props: ParentProps) {
     }
   }
 
-  const [scrollSessionKey, setScrollSessionKey] = createSignal<string | undefined>(undefined)
-
   function scrollToSession(sessionId: string, sessionKey: string) {
     if (!scrollContainerRef) return
-    if (scrollSessionKey() === sessionKey) return
+    if (state.scrollSessionKey === sessionKey) return
     const element = scrollContainerRef.querySelector(`[data-session-id="${sessionId}"]`)
     if (!element) return
     const containerRect = scrollContainerRef.getBoundingClientRect()
     const elementRect = element.getBoundingClientRect()
     if (elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom) {
-      setScrollSessionKey(sessionKey)
+      setState("scrollSessionKey", sessionKey)
       return
     }
-    setScrollSessionKey(sessionKey)
+    setState("scrollSessionKey", sessionKey)
     element.scrollIntoView({ block: "nearest", behavior: "smooth" })
   }
 
@@ -539,7 +540,27 @@ export default function Layout(props: ParentProps) {
     ),
   )
 
-  // Auto-navigation from home removed - user stays on home screen until they choose a project
+  createEffect(
+    on(
+      () => ({ ready: pageReady(), layoutReady: layoutReady(), dir: params.dir, list: layout.projects.list() }),
+      (value) => {
+        if (!value.ready) return
+        if (!value.layoutReady) return
+        if (!state.autoselect) return
+        if (initialDir) return
+        if (value.dir) return
+        if (value.list.length === 0) return
+
+        const last = server.projects.last()
+        const next = value.list.find((project) => project.worktree === last) ?? value.list[0]
+        if (!next) return
+        setState("autoselect", false)
+        openProject(next.worktree, false)
+        navigateToProject(next.worktree)
+      },
+      { defer: true },
+    ),
+  )
 
   const workspaceKey = (directory: string) => directory.replace(/[\\/]+$/, "")
 
@@ -1047,8 +1068,8 @@ export default function Layout(props: ParentProps) {
   function navigateToProject(directory: string | undefined) {
     if (!directory) return
     if (!layout.sidebar.opened()) {
-      setHoverSession(undefined)
-      setHoverProject(undefined)
+      setState("hoverSession", undefined)
+      setState("hoverProject", undefined)
     }
     server.projects.touch(directory)
     const lastSession = store.lastSession[directory]
@@ -1059,8 +1080,8 @@ export default function Layout(props: ParentProps) {
   function navigateToSession(session: Session | undefined) {
     if (!session) return
     if (!layout.sidebar.opened()) {
-      setHoverSession(undefined)
-      setHoverProject(undefined)
+      setState("hoverSession", undefined)
+      setState("hoverProject", undefined)
     }
     navigate(`/${base64Encode(session.directory)}/session/${session.id}`)
     layout.mobileSidebar.hide()
@@ -1453,7 +1474,7 @@ export default function Layout(props: ParentProps) {
   function handleDragStart(event: unknown) {
     const id = getDraggableId(event)
     if (!id) return
-    setHoverProject(undefined)
+    setState("hoverProject", undefined)
     setStore("activeProject", id)
   }
 
@@ -1613,8 +1634,10 @@ export default function Layout(props: ParentProps) {
     const hoverAllowed = createMemo(() => !props.mobile && sidebarExpanded())
     const hoverEnabled = createMemo(() => (props.popover ?? true) && hoverAllowed())
     const isActive = createMemo(() => props.session.id === params.id)
-    const [menuOpen, setMenuOpen] = createSignal(false)
-    const [pendingRename, setPendingRename] = createSignal(false)
+    const [menu, setMenu] = createStore({
+      open: false,
+      pendingRename: false,
+    })
 
     const messageLabel = (message: Message) => {
       const parts = sessionStore.part[message.id] ?? []
@@ -1625,13 +1648,13 @@ export default function Layout(props: ParentProps) {
     const item = (
       <A
         href={`${props.slug}/session/${props.session.id}`}
-        class={`flex items-center justify-between gap-3 min-w-0 text-left w-full focus:outline-none transition-[padding] ${menuOpen() ? "pr-7" : ""} group-hover/session:pr-7 group-focus-within/session:pr-7 group-active/session:pr-7 ${props.dense ? "py-0.5" : "py-1"}`}
+        class={`flex items-center justify-between gap-3 min-w-0 text-left w-full focus:outline-none transition-[padding] ${menu.open ? "pr-7" : ""} group-hover/session:pr-7 group-focus-within/session:pr-7 group-active/session:pr-7 ${props.dense ? "py-0.5" : "py-1"}`}
         onMouseEnter={() => prefetchSession(props.session, "high")}
         onFocus={() => prefetchSession(props.session, "high")}
         onClick={() => {
-          setHoverSession(undefined)
+          setState("hoverSession", undefined)
           if (layout.sidebar.opened()) return
-          queueMicrotask(() => setHoverProject(undefined))
+          queueMicrotask(() => setState("hoverProject", undefined))
         }}
       >
         <div class="flex items-center gap-1 w-full">
@@ -1694,9 +1717,9 @@ export default function Layout(props: ParentProps) {
             gutter={16}
             shift={-2}
             trigger={item}
-            mount={!props.mobile ? nav() : undefined}
-            open={hoverSession() === props.session.id}
-            onOpenChange={(open) => setHoverSession(open ? props.session.id : undefined)}
+            mount={!props.mobile ? state.nav : undefined}
+            open={state.hoverSession === props.session.id}
+            onOpenChange={(open) => setState("hoverSession", open ? props.session.id : undefined)}
           >
             <Show
               when={hoverReady()}
@@ -1726,13 +1749,13 @@ export default function Layout(props: ParentProps) {
         <div
           class={`absolute ${props.dense ? "top-0.5 right-0.5" : "top-1 right-1"} flex items-center gap-0.5 transition-opacity`}
           classList={{
-            "opacity-100 pointer-events-auto": menuOpen(),
-            "opacity-0 pointer-events-none": !menuOpen(),
+            "opacity-100 pointer-events-auto": menu.open,
+            "opacity-0 pointer-events-none": !menu.open,
             "group-hover/session:opacity-100 group-hover/session:pointer-events-auto": true,
             "group-focus-within/session:opacity-100 group-focus-within/session:pointer-events-auto": true,
           }}
         >
-          <DropdownMenu modal={!sidebarHovering()} open={menuOpen()} onOpenChange={setMenuOpen}>
+          <DropdownMenu modal={!sidebarHovering()} open={menu.open} onOpenChange={(open) => setMenu("open", open)}>
             <Tooltip value={language.t("common.moreOptions")} placement="top">
               <DropdownMenu.Trigger
                 as={IconButton}
@@ -1742,19 +1765,19 @@ export default function Layout(props: ParentProps) {
                 aria-label={language.t("common.moreOptions")}
               />
             </Tooltip>
-            <DropdownMenu.Portal mount={!props.mobile ? nav() : undefined}>
+            <DropdownMenu.Portal mount={!props.mobile ? state.nav : undefined}>
               <DropdownMenu.Content
                 onCloseAutoFocus={(event) => {
-                  if (!pendingRename()) return
+                  if (!menu.pendingRename) return
                   event.preventDefault()
-                  setPendingRename(false)
+                  setMenu("pendingRename", false)
                   openEditor(`session:${props.session.id}`, props.session.title)
                 }}
               >
                 <DropdownMenu.Item
                   onSelect={() => {
-                    setPendingRename(true)
-                    setMenuOpen(false)
+                    setMenu("pendingRename", true)
+                    setMenu("open", false)
                   }}
                 >
                   <DropdownMenu.ItemLabel>{language.t("common.rename")}</DropdownMenu.ItemLabel>
@@ -1783,9 +1806,9 @@ export default function Layout(props: ParentProps) {
         end
         class={`flex items-center justify-between gap-3 min-w-0 text-left w-full focus:outline-none ${props.dense ? "py-0.5" : "py-1"}`}
         onClick={() => {
-          setHoverSession(undefined)
+          setState("hoverSession", undefined)
           if (layout.sidebar.opened()) return
-          queueMicrotask(() => setHoverProject(undefined))
+          queueMicrotask(() => setState("hoverProject", undefined))
         }}
       >
         <div class="flex items-center gap-1 w-full">
@@ -1865,8 +1888,10 @@ export default function Layout(props: ParentProps) {
   const SortableWorkspace = (props: { directory: string; project: LocalProject; mobile?: boolean }): JSX.Element => {
     const sortable = createSortable(props.directory)
     const [workspaceStore, setWorkspaceStore] = globalSync.child(props.directory, { bootstrap: false })
-    const [menuOpen, setMenuOpen] = createSignal(false)
-    const [pendingRename, setPendingRename] = createSignal(false)
+    const [menu, setMenu] = createStore({
+      open: false,
+      pendingRename: false,
+    })
     const slug = createMemo(() => base64Encode(props.directory))
     const sessions = createMemo(() =>
       workspaceStore.session
@@ -1976,13 +2001,17 @@ export default function Layout(props: ParentProps) {
                 <div
                   class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 transition-opacity"
                   classList={{
-                    "opacity-100 pointer-events-auto": menuOpen(),
-                    "opacity-0 pointer-events-none": !menuOpen(),
+                    "opacity-100 pointer-events-auto": menu.open,
+                    "opacity-0 pointer-events-none": !menu.open,
                     "group-hover/workspace:opacity-100 group-hover/workspace:pointer-events-auto": true,
                     "group-focus-within/workspace:opacity-100 group-focus-within/workspace:pointer-events-auto": true,
                   }}
                 >
-                  <DropdownMenu modal={!sidebarHovering()} open={menuOpen()} onOpenChange={setMenuOpen}>
+                  <DropdownMenu
+                    modal={!sidebarHovering()}
+                    open={menu.open}
+                    onOpenChange={(open) => setMenu("open", open)}
+                  >
                     <Tooltip value={language.t("common.moreOptions")} placement="top">
                       <DropdownMenu.Trigger
                         as={IconButton}
@@ -1992,20 +2021,20 @@ export default function Layout(props: ParentProps) {
                         aria-label={language.t("common.moreOptions")}
                       />
                     </Tooltip>
-                    <DropdownMenu.Portal mount={!props.mobile ? nav() : undefined}>
+                    <DropdownMenu.Portal mount={!props.mobile ? state.nav : undefined}>
                       <DropdownMenu.Content
                         onCloseAutoFocus={(event) => {
-                          if (!pendingRename()) return
+                          if (!menu.pendingRename) return
                           event.preventDefault()
-                          setPendingRename(false)
+                          setMenu("pendingRename", false)
                           openEditor(`workspace:${props.directory}`, workspaceValue())
                         }}
                       >
                         <DropdownMenu.Item
                           disabled={local()}
                           onSelect={() => {
-                            setPendingRename(true)
-                            setMenuOpen(false)
+                            setMenu("pendingRename", true)
+                            setMenu("open", false)
                           }}
                         >
                           <DropdownMenu.ItemLabel>{language.t("common.rename")}</DropdownMenu.ItemLabel>
@@ -2084,7 +2113,7 @@ export default function Layout(props: ParentProps) {
 
     const preview = createMemo(() => !props.mobile && layout.sidebar.opened())
     const overlay = createMemo(() => !props.mobile && !layout.sidebar.opened())
-    const active = createMemo(() => (preview() ? open() : overlay() && hoverProject() === props.project.worktree))
+    const active = createMemo(() => (preview() ? open() : overlay() && state.hoverProject === props.project.worktree))
 
     createEffect(() => {
       if (preview()) return
@@ -2136,14 +2165,14 @@ export default function Layout(props: ParentProps) {
         onMouseEnter={() => {
           if (!overlay()) return
           globalSync.child(props.project.worktree)
-          setHoverProject(props.project.worktree)
-          setHoverSession(undefined)
+          setState("hoverProject", props.project.worktree)
+          setState("hoverSession", undefined)
         }}
         onFocus={() => {
           if (!overlay()) return
           globalSync.child(props.project.worktree)
-          setHoverProject(props.project.worktree)
-          setHoverSession(undefined)
+          setState("hoverProject", props.project.worktree)
+          setState("hoverSession", undefined)
         }}
         onClick={() => navigateToProject(props.project.worktree)}
         onBlur={() => setOpen(false)}
@@ -2167,7 +2196,7 @@ export default function Layout(props: ParentProps) {
             trigger={trigger}
             onOpenChange={(value) => {
               setOpen(value)
-              if (value) setHoverSession(undefined)
+              if (value) setState("hoverSession", undefined)
             }}
           >
             <div class="-m-3 p-2 flex flex-col w-72">
@@ -2306,8 +2335,8 @@ export default function Layout(props: ParentProps) {
 
   const createWorkspace = async (project: LocalProject) => {
     if (!layout.sidebar.opened()) {
-      setHoverSession(undefined)
-      setHoverProject(undefined)
+      setState("hoverSession", undefined)
+      setState("hoverProject", undefined)
     }
     const created = await globalSDK.client.worktree
       .create({ directory: project.worktree })
@@ -2410,7 +2439,7 @@ export default function Layout(props: ParentProps) {
                       class="shrink-0 size-6 rounded-md opacity-0 group-hover/project:opacity-100 data-[expanded]:opacity-100 data-[expanded]:bg-surface-base-active"
                       aria-label={language.t("common.moreOptions")}
                     />
-                    <DropdownMenu.Portal mount={!panelProps.mobile ? nav() : undefined}>
+                    <DropdownMenu.Portal mount={!panelProps.mobile ? state.nav : undefined}>
                       <DropdownMenu.Content class="mt-1">
                         <DropdownMenu.Item onSelect={() => dialog.show(() => <DialogEditProject project={p} />)}>
                           <DropdownMenu.ItemLabel>{language.t("common.edit")}</DropdownMenu.ItemLabel>
@@ -2459,8 +2488,8 @@ export default function Layout(props: ParentProps) {
                           class="w-full"
                           onClick={() => {
                             if (!layout.sidebar.opened()) {
-                              setHoverSession(undefined)
-                              setHoverProject(undefined)
+                              setState("hoverSession", undefined)
+                              setState("hoverProject", undefined)
                             }
                             navigate(`/${base64Encode(p.worktree)}/session`)
                             layout.mobileSidebar.hide()
@@ -2660,7 +2689,7 @@ export default function Layout(props: ParentProps) {
           }}
           style={{ width: layout.sidebar.opened() ? `${Math.max(layout.sidebar.width(), 244)}px` : "64px" }}
           ref={(el) => {
-            setNav(el)
+            setState("nav", el)
           }}
           onMouseEnter={() => {
             if (navLeave.current === undefined) return
@@ -2673,8 +2702,8 @@ export default function Layout(props: ParentProps) {
             if (navLeave.current !== undefined) clearTimeout(navLeave.current)
             navLeave.current = window.setTimeout(() => {
               navLeave.current = undefined
-              setHoverProject(undefined)
-              setHoverSession(undefined)
+              setState("hoverProject", undefined)
+              setState("hoverSession", undefined)
             }, 300)
           }}
         >
