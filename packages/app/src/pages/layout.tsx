@@ -139,6 +139,12 @@ export default function Layout(props: ParentProps) {
   const [hoverProject, setHoverProject] = createSignal<string | undefined>()
 
   const [nav, setNav] = createSignal<HTMLElement | undefined>(undefined)
+  const navLeave = { current: undefined as number | undefined }
+
+  onCleanup(() => {
+    if (navLeave.current === undefined) return
+    clearTimeout(navLeave.current)
+  })
 
   const sidebarHovering = createMemo(() => !layout.sidebar.opened() && hoverProject() !== undefined)
   const sidebarExpanded = createMemo(() => layout.sidebar.opened() || sidebarHovering())
@@ -1683,9 +1689,10 @@ export default function Layout(props: ParentProps) {
         >
           <HoverCard
             openDelay={1000}
-            closeDelay={sidebarHovering() ? 300 : 0}
-            placement="right"
-            gutter={28}
+            closeDelay={sidebarHovering() ? 600 : 0}
+            placement="right-start"
+            gutter={16}
+            shift={-2}
             trigger={item}
             mount={!props.mobile ? nav() : undefined}
             open={hoverSession() === props.session.id}
@@ -2048,7 +2055,7 @@ export default function Layout(props: ParentProps) {
                     size="large"
                     onClick={(e: MouseEvent) => {
                       loadMore()
-                      ;(e.currentTarget as HTMLButtonElement).blur()
+                        ; (e.currentTarget as HTMLButtonElement).blur()
                     }}
                   >
                     {language.t("common.loadMore")}
@@ -2285,7 +2292,7 @@ export default function Layout(props: ParentProps) {
                 size="large"
                 onClick={(e: MouseEvent) => {
                   loadMore()
-                  ;(e.currentTarget as HTMLButtonElement).blur()
+                    ; (e.currentTarget as HTMLButtonElement).blur()
                 }}
               >
                 {language.t("common.loadMore")}
@@ -2655,9 +2662,20 @@ export default function Layout(props: ParentProps) {
           ref={(el) => {
             setNav(el)
           }}
+          onMouseEnter={() => {
+            if (navLeave.current === undefined) return
+            clearTimeout(navLeave.current)
+            navLeave.current = undefined
+          }}
           onMouseLeave={() => {
-            setHoverSession(undefined)
-            setHoverProject(undefined)
+            if (!sidebarHovering()) return
+
+            if (navLeave.current !== undefined) clearTimeout(navLeave.current)
+            navLeave.current = window.setTimeout(() => {
+              navLeave.current = undefined
+              setHoverProject(undefined)
+              setHoverSession(undefined)
+            }, 300)
           }}
         >
           <div class="@container w-full h-full contain-strict">
