@@ -21,6 +21,7 @@ import { PromptProvider } from "@/context/prompt"
 import { FileProvider } from "@/context/file"
 import { CommentsProvider } from "@/context/comments"
 import { NotificationProvider } from "@/context/notification"
+import { ModelsProvider } from "@/context/models"
 import { DialogProvider } from "@opencode-ai/ui/context/dialog"
 import { CommandProvider } from "@/context/command"
 import { LanguageProvider, useLanguage } from "@/context/language"
@@ -118,9 +119,11 @@ export function AppInterface(props: { defaultUrl?: string }) {
                     <PermissionProvider>
                       <LayoutProvider>
                         <NotificationProvider>
-                          <CommandProvider>
-                            <Layout>{props.children}</Layout>
-                          </CommandProvider>
+                          <ModelsProvider>
+                            <CommandProvider>
+                              <Layout>{props.children}</Layout>
+                            </CommandProvider>
+                          </ModelsProvider>
                         </NotificationProvider>
                       </LayoutProvider>
                     </PermissionProvider>
@@ -128,35 +131,35 @@ export function AppInterface(props: { defaultUrl?: string }) {
                 )}
               >
                 <Route
-                path="/"
-                component={() => (
-                  <Suspense fallback={<Loading />}>
-                    <Home />
-                  </Suspense>
-                )}
-              />
-              <Route path="/:dir" component={DirectoryLayout}>
-                <Route path="/" component={() => <Navigate href="session" />} />
-                <Route
-                  path="/session/:id?"
-                  component={(p) => (
-                    <Show when={p.params.id ?? "new"}>
-                      <TerminalProvider>
-                        <FileProvider>
-                          <PromptProvider>
-                            <CommentsProvider>
-                              <Suspense fallback={<Loading />}>
-                                <Session />
-                              </Suspense>
-                            </CommentsProvider>
-                          </PromptProvider>
-                        </FileProvider>
-                      </TerminalProvider>
-                    </Show>
+                  path="/"
+                  component={() => (
+                    <Suspense fallback={<Loading />}>
+                      <Home />
+                    </Suspense>
                   )}
                 />
-              </Route>
-            </Router>
+                <Route path="/:dir" component={DirectoryLayout}>
+                  <Route path="/" component={() => <Navigate href="session" />} />
+                  <Route
+                    path="/session/:id?"
+                    component={(p) => (
+                      <Show when={p.params.id ?? "new"}>
+                        <TerminalProvider>
+                          <FileProvider>
+                            <PromptProvider>
+                              <CommentsProvider>
+                                <Suspense fallback={<Loading />}>
+                                  <Session />
+                                </Suspense>
+                              </CommentsProvider>
+                            </PromptProvider>
+                          </FileProvider>
+                        </TerminalProvider>
+                      </Show>
+                    )}
+                  />
+                </Route>
+              </Router>
             </GitHubProjectsProvider>
           </GlobalSyncProvider>
         </GlobalSDKProvider>
