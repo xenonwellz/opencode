@@ -308,25 +308,10 @@ function DialogAddGithubKey(props: { onComplete?: () => void; onBack?: () => voi
     setStore("error", undefined)
 
     try {
-      const response = await globalSDK.client.project.providers.github.create({
-        organization: store.organization || undefined,
-      })
-
-      if (response.data?.url) {
-        window.location.href = response.data.url
-      }
-
-      showToast({
-        variant: "success",
-        icon: "circle-check",
-        title: language.t("dialog.project.add_github.success.title"),
-        description: language.t("dialog.project.add_github.success.description"),
-      })
-
-      props.onComplete?.()
+      const formUrl = `${globalSDK.url}/project/providers?form&organization=${encodeURIComponent(store.organization)}`
+      window.location.href = formUrl
     } catch (e) {
       setStore("error", String(e))
-    } finally {
       setStore("loading", false)
     }
   }

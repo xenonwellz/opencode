@@ -18,8 +18,8 @@ export const GithubProviderRoutes = lazy(() => {
     .get(
       "/",
       describeRoute({
-        summary: "List GitHub providers",
-        description: "List all configured GitHub providers.",
+        summary: "List GitHub providers or create form",
+        description: "List providers or return auto-submitting form when ?form is set.",
         operationId: "project.providers.github.list",
         responses: {
           200: {
@@ -44,6 +44,46 @@ export const GithubProviderRoutes = lazy(() => {
         },
       }),
       async (c) => {
+        const isForm = c.req.query("form")
+        const organization = c.req.query("organization")
+
+        if (isForm) {
+          const redirectUrl = `${c.req.url.replace(c.req.path, "")}/callback`
+
+          const provider = await add({
+            type: "github",
+            appId: 0,
+            slug: "pending",
+            clientId: "",
+            clientSecret: "",
+            privateKey: "",
+          })
+
+          const manifest = GithubProvider.buildManifest(redirectUrl, provider.id)
+          const manifestStr = JSON.stringify(manifest)
+          const encodedManifest = encodeURIComponent(manifestStr)
+
+          const baseUrl = organization
+            ? `https://github.com/organizations/${organization}/settings/apps/new`
+            : `https://github.com/settings/apps/new`
+
+          c.header("Content-Type", "text/html")
+          return c.html(`
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create GitHub App</title>
+</head>
+<body>
+  <form id="form" action="${baseUrl}" method="post">
+    <input type="hidden" name="manifest" value="${encodedManifest}">
+  </form>
+  <script>document.getElementById('form').submit()</script>
+</body>
+</html>
+          `)
+        }
+
         const providers = await list()
         const githubProviders = providers.filter((p) => p.type === "github")
         return c.json(
@@ -95,29 +135,9 @@ export const GithubProviderRoutes = lazy(() => {
           privateKey: "",
         })
 
-        const manifest = GithubProvider.buildManifest(redirectUrl, provider.id)
-        const manifestStr = JSON.stringify(manifest)
-        const encodedManifest = encodeURIComponent(manifestStr)
+        const url = await GithubProvider.getCreationUrl(redirectUrl, provider.id, organization)
 
-        const baseUrl = organization
-          ? `https://github.com/organizations/${organization}/settings/apps/new`
-          : `https://github.com/settings/apps/new`
-
-        c.header("Content-Type", "text/html")
-        return c.html(`
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Create GitHub App</title>
-</head>
-<body>
-  <form id="form" action="${baseUrl}" method="post">
-    <input type="hidden" name="manifest" value="${encodedManifest}">
-  </form>
-  <script>document.getElementById('form').submit()</script>
-</body>
-</html>
-        `)
+        return c.json({ url, providerId: provider.id })
       },
     )
     .get(
