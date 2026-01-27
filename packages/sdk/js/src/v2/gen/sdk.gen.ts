@@ -12,7 +12,7 @@ import type {
   AuthSetErrors,
   AuthSetResponses,
   CommandListResponses,
-  Config as Config3,
+  Config as Config2,
   ConfigGetResponses,
   ConfigProvidersResponses,
   ConfigUpdateErrors,
@@ -33,15 +33,6 @@ import type {
   FindSymbolsResponses,
   FindTextResponses,
   FormatterStatusResponses,
-  GithubAppConfigGetResponses,
-  GithubAppSetupResponses,
-  GithubCloneErrors,
-  GithubCloneResponses,
-  GithubKeysCreateErrors,
-  GithubKeysCreateResponses,
-  GithubKeysDeleteErrors,
-  GithubKeysDeleteResponses,
-  GithubKeysListResponses,
   GithubPullRequestsCreateErrors,
   GithubPullRequestsCreateResponses,
   GithubPullRequestsGetErrors,
@@ -50,10 +41,6 @@ import type {
   GithubPushResponses,
   GithubRemoteInfoErrors,
   GithubRemoteInfoResponses,
-  GithubReposBranchesErrors,
-  GithubReposBranchesResponses,
-  GithubReposListErrors,
-  GithubReposListResponses,
   GithubStatusErrors,
   GithubStatusResponses,
   GlobalDisposeResponses,
@@ -90,6 +77,19 @@ import type {
   PermissionRuleset,
   ProjectCurrentResponses,
   ProjectListResponses,
+  ProjectProvidersGithubCloneErrors,
+  ProjectProvidersGithubCloneResponses,
+  ProjectProvidersGithubCreateErrors,
+  ProjectProvidersGithubCreateResponses,
+  ProjectProvidersGithubDeleteErrors,
+  ProjectProvidersGithubDeleteResponses,
+  ProjectProvidersGithubInstallationsListErrors,
+  ProjectProvidersGithubInstallationsListResponses,
+  ProjectProvidersGithubListResponses,
+  ProjectProvidersGithubReposBranchesErrors,
+  ProjectProvidersGithubReposBranchesResponses,
+  ProjectProvidersGithubReposListErrors,
+  ProjectProvidersGithubReposListResponses,
   ProjectUpdateErrors,
   ProjectUpdateResponses,
   ProviderAuthResponses,
@@ -276,6 +276,316 @@ export class Global extends HeyApiClient {
   }
 }
 
+export class Installations extends HeyApiClient {
+  /**
+   * List installations
+   *
+   * List GitHub App installations for a provider.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters: {
+      providerId: string
+      directory?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "providerId" },
+            { in: "query", key: "directory" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ProjectProvidersGithubInstallationsListResponses,
+      ProjectProvidersGithubInstallationsListErrors,
+      ThrowOnError
+    >({
+      url: "/project/providers/{providerId}/installations",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Repos extends HeyApiClient {
+  /**
+   * List repositories
+   *
+   * List repositories for a provider installation.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters: {
+      providerId: string
+      directory?: string
+      installationId: number
+      query?: string
+      page?: number
+      perPage?: number
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "providerId" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "installationId" },
+            { in: "query", key: "query" },
+            { in: "query", key: "page" },
+            { in: "query", key: "perPage" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ProjectProvidersGithubReposListResponses,
+      ProjectProvidersGithubReposListErrors,
+      ThrowOnError
+    >({
+      url: "/project/providers/{providerId}/repos",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * List branches
+   *
+   * List branches for a repository.
+   */
+  public branches<ThrowOnError extends boolean = false>(
+    parameters: {
+      providerId: string
+      owner: string
+      repo: string
+      directory?: string
+      installationId: number
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "providerId" },
+            { in: "path", key: "owner" },
+            { in: "path", key: "repo" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "installationId" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ProjectProvidersGithubReposBranchesResponses,
+      ProjectProvidersGithubReposBranchesErrors,
+      ThrowOnError
+    >({
+      url: "/project/providers/{providerId}/repos/{owner}/{repo}/branches",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Github extends HeyApiClient {
+  /**
+   * List GitHub providers
+   *
+   * List all configured GitHub providers.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "directory" }] }])
+    return (options?.client ?? this.client).get<ProjectProvidersGithubListResponses, unknown, ThrowOnError>({
+      url: "/project/providers",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Create GitHub provider
+   *
+   * Create a new GitHub provider setup flow.
+   */
+  public create<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      organization?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "body", key: "organization" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ProjectProvidersGithubCreateResponses,
+      ProjectProvidersGithubCreateErrors,
+      ThrowOnError
+    >({
+      url: "/project/providers",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * GitHub provider callback
+   *
+   * Handle GitHub provider callback and complete setup.
+   */
+  public callback<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      code: string
+      state: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "code" },
+            { in: "query", key: "state" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<unknown, unknown, ThrowOnError>({
+      url: "/project/providers/callback",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Delete GitHub provider
+   *
+   * Remove a GitHub provider configuration.
+   */
+  public delete<ThrowOnError extends boolean = false>(
+    parameters: {
+      providerId: string
+      directory?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "providerId" },
+            { in: "query", key: "directory" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      ProjectProvidersGithubDeleteResponses,
+      ProjectProvidersGithubDeleteErrors,
+      ThrowOnError
+    >({
+      url: "/project/providers/{providerId}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Clone repository
+   *
+   * Clone a repository using a GitHub provider.
+   */
+  public clone<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      providerId?: string
+      installationId?: number
+      owner?: string
+      repo?: string
+      branch?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "body", key: "providerId" },
+            { in: "body", key: "installationId" },
+            { in: "body", key: "owner" },
+            { in: "body", key: "repo" },
+            { in: "body", key: "branch" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ProjectProvidersGithubCloneResponses,
+      ProjectProvidersGithubCloneErrors,
+      ThrowOnError
+    >({
+      url: "/project/providers/clone",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  private _installations?: Installations
+  get installations(): Installations {
+    return (this._installations ??= new Installations({ client: this.client }))
+  }
+
+  private _repos?: Repos
+  get repos(): Repos {
+    return (this._repos ??= new Repos({ client: this.client }))
+  }
+}
+
+export class Providers extends HeyApiClient {
+  private _github?: Github
+  get github(): Github {
+    return (this._github ??= new Github({ client: this.client }))
+  }
+}
+
 export class Project extends HeyApiClient {
   /**
    * List all projects
@@ -363,6 +673,11 @@ export class Project extends HeyApiClient {
         ...params.headers,
       },
     })
+  }
+
+  private _providers?: Providers
+  get providers(): Providers {
+    return (this._providers ??= new Providers({ client: this.client }))
   }
 }
 
@@ -592,7 +907,7 @@ export class Config extends HeyApiClient {
   public update<ThrowOnError extends boolean = false>(
     parameters?: {
       directory?: string
-      config?: Config3
+      config?: Config2
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -2082,340 +2397,6 @@ export class Provider extends HeyApiClient {
   }
 }
 
-export class Keys extends HeyApiClient {
-  /**
-   * List GitHub keys
-   *
-   * Get a list of all saved GitHub personal access tokens.
-   */
-  public list<ThrowOnError extends boolean = false>(
-    parameters?: {
-      directory?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "directory" }] }])
-    return (options?.client ?? this.client).get<GithubKeysListResponses, unknown, ThrowOnError>({
-      url: "/github/keys",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Add GitHub key
-   *
-   * Add a new GitHub personal access token.
-   */
-  public create<ThrowOnError extends boolean = false>(
-    parameters?: {
-      directory?: string
-      name?: string
-      token?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "directory" },
-            { in: "body", key: "name" },
-            { in: "body", key: "token" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<GithubKeysCreateResponses, GithubKeysCreateErrors, ThrowOnError>({
-      url: "/github/keys",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Delete GitHub key
-   *
-   * Remove a GitHub personal access token.
-   */
-  public delete<ThrowOnError extends boolean = false>(
-    parameters: {
-      keyID: string
-      directory?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "keyID" },
-            { in: "query", key: "directory" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).delete<GithubKeysDeleteResponses, GithubKeysDeleteErrors, ThrowOnError>({
-      url: "/github/keys/{keyID}",
-      ...options,
-      ...params,
-    })
-  }
-}
-
-export class Config2 extends HeyApiClient {
-  /**
-   * Delete GitHub App config
-   *
-   * Remove the GitHub App configuration.
-   */
-  public delete<ThrowOnError extends boolean = false>(
-    parameters?: {
-      directory?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "directory" }] }])
-    return (options?.client ?? this.client).delete<unknown, unknown, ThrowOnError>({
-      url: "/github/app/config",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Get GitHub App config
-   *
-   * Get the current GitHub App configuration.
-   */
-  public get<ThrowOnError extends boolean = false>(
-    parameters?: {
-      directory?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "directory" }] }])
-    return (options?.client ?? this.client).get<GithubAppConfigGetResponses, unknown, ThrowOnError>({
-      url: "/github/app/config",
-      ...options,
-      ...params,
-    })
-  }
-}
-
-export class Installations extends HeyApiClient {
-  /**
-   * List installations
-   *
-   * List all installations of the GitHub App.
-   */
-  public list<ThrowOnError extends boolean = false>(
-    parameters?: {
-      directory?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "directory" }] }])
-    return (options?.client ?? this.client).get<unknown, unknown, ThrowOnError>({
-      url: "/github/app/installations",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Register installation
-   *
-   * Register a GitHub App installation as a key.
-   */
-  public register<ThrowOnError extends boolean = false>(
-    parameters: {
-      installationId: number
-      directory?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "installationId" },
-            { in: "query", key: "directory" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<unknown, unknown, ThrowOnError>({
-      url: "/github/app/installations/{installationId}/register",
-      ...options,
-      ...params,
-    })
-  }
-}
-
-export class App extends HeyApiClient {
-  /**
-   * Setup GitHub App
-   *
-   * Get the GitHub App creation URL.
-   */
-  public setup<ThrowOnError extends boolean = false>(
-    parameters?: {
-      directory?: string
-      redirectUrl?: string
-      organization?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "directory" },
-            { in: "body", key: "redirectUrl" },
-            { in: "body", key: "organization" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<GithubAppSetupResponses, unknown, ThrowOnError>({
-      url: "/github/app/setup",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * GitHub App callback
-   *
-   * Handle the callback from GitHub after creating an app.
-   */
-  public callback<ThrowOnError extends boolean = false>(
-    parameters: {
-      directory?: string
-      code: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "directory" },
-            { in: "query", key: "code" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).get<unknown, unknown, ThrowOnError>({
-      url: "/github/app/callback",
-      ...options,
-      ...params,
-    })
-  }
-
-  private _config?: Config2
-  get config(): Config2 {
-    return (this._config ??= new Config2({ client: this.client }))
-  }
-
-  private _installations?: Installations
-  get installations(): Installations {
-    return (this._installations ??= new Installations({ client: this.client }))
-  }
-}
-
-export class Repos extends HeyApiClient {
-  /**
-   * List repositories
-   *
-   * List GitHub repositories accessible with the provided key.
-   */
-  public list<ThrowOnError extends boolean = false>(
-    parameters: {
-      directory?: string
-      keyID: string
-      query?: string
-      page?: number
-      perPage?: number
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "directory" },
-            { in: "query", key: "keyID" },
-            { in: "query", key: "query" },
-            { in: "query", key: "page" },
-            { in: "query", key: "perPage" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).get<GithubReposListResponses, GithubReposListErrors, ThrowOnError>({
-      url: "/github/repos",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * List branches
-   *
-   * List branches for a GitHub repository.
-   */
-  public branches<ThrowOnError extends boolean = false>(
-    parameters: {
-      owner: string
-      repo: string
-      directory?: string
-      keyID: string
-      query?: string
-      perPage?: number
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "owner" },
-            { in: "path", key: "repo" },
-            { in: "query", key: "directory" },
-            { in: "query", key: "keyID" },
-            { in: "query", key: "query" },
-            { in: "query", key: "perPage" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).get<GithubReposBranchesResponses, GithubReposBranchesErrors, ThrowOnError>({
-      url: "/github/repos/{owner}/{repo}/branches",
-      ...options,
-      ...params,
-    })
-  }
-}
-
 export class PullRequests extends HeyApiClient {
   /**
    * Get pull request
@@ -2425,7 +2406,7 @@ export class PullRequests extends HeyApiClient {
   public get<ThrowOnError extends boolean = false>(
     parameters: {
       directory: string
-      keyID: string
+      installationId: number
       headBranch?: string
     },
     options?: Options<never, ThrowOnError>,
@@ -2436,7 +2417,7 @@ export class PullRequests extends HeyApiClient {
         {
           args: [
             { in: "query", key: "directory" },
-            { in: "query", key: "keyID" },
+            { in: "query", key: "installationId" },
             { in: "query", key: "headBranch" },
           ],
         },
@@ -2461,7 +2442,7 @@ export class PullRequests extends HeyApiClient {
   public create<ThrowOnError extends boolean = false>(
     parameters?: {
       query_directory?: string
-      keyID?: string
+      installationId?: number
       body_directory?: string
       title?: string
       body?: string
@@ -2480,7 +2461,7 @@ export class PullRequests extends HeyApiClient {
               key: "query_directory",
               map: "directory",
             },
-            { in: "body", key: "keyID" },
+            { in: "body", key: "installationId" },
             {
               in: "body",
               key: "body_directory",
@@ -2511,48 +2492,7 @@ export class PullRequests extends HeyApiClient {
   }
 }
 
-export class Github extends HeyApiClient {
-  /**
-   * Clone repository
-   *
-   * Clone a GitHub repository to the workspace directory.
-   */
-  public clone<ThrowOnError extends boolean = false>(
-    parameters?: {
-      directory?: string
-      keyID?: string
-      owner?: string
-      repo?: string
-      branch?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "directory" },
-            { in: "body", key: "keyID" },
-            { in: "body", key: "owner" },
-            { in: "body", key: "repo" },
-            { in: "body", key: "branch" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<GithubCloneResponses, GithubCloneErrors, ThrowOnError>({
-      url: "/github/clone",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
+export class Github2 extends HeyApiClient {
   /**
    * Get remote info
    *
@@ -2594,12 +2534,12 @@ export class Github extends HeyApiClient {
   /**
    * Push changes
    *
-   * Commit and push changes to GitHub using stored token.
+   * Commit and push changes to GitHub using GitHub App.
    */
   public push<ThrowOnError extends boolean = false>(
     parameters?: {
       query_directory?: string
-      keyID?: string
+      installationId?: number
       body_directory?: string
       message?: string
       branchName?: string
@@ -2616,7 +2556,7 @@ export class Github extends HeyApiClient {
               key: "query_directory",
               map: "directory",
             },
-            { in: "body", key: "keyID" },
+            { in: "body", key: "installationId" },
             {
               in: "body",
               key: "body_directory",
@@ -2638,21 +2578,6 @@ export class Github extends HeyApiClient {
         ...params.headers,
       },
     })
-  }
-
-  private _keys?: Keys
-  get keys(): Keys {
-    return (this._keys ??= new Keys({ client: this.client }))
-  }
-
-  private _app?: App
-  get app(): App {
-    return (this._app ??= new App({ client: this.client }))
-  }
-
-  private _repos?: Repos
-  get repos(): Repos {
-    return (this._repos ??= new Repos({ client: this.client }))
   }
 
   private _pullRequests?: PullRequests
@@ -3548,7 +3473,7 @@ export class Command extends HeyApiClient {
   }
 }
 
-export class App2 extends HeyApiClient {
+export class App extends HeyApiClient {
   /**
    * Write log
    *
@@ -3801,9 +3726,9 @@ export class OpencodeClient extends HeyApiClient {
     return (this._provider ??= new Provider({ client: this.client }))
   }
 
-  private _github?: Github
-  get github(): Github {
-    return (this._github ??= new Github({ client: this.client }))
+  private _github?: Github2
+  get github(): Github2 {
+    return (this._github ??= new Github2({ client: this.client }))
   }
 
   private _find?: Find
@@ -3851,9 +3776,9 @@ export class OpencodeClient extends HeyApiClient {
     return (this._command ??= new Command({ client: this.client }))
   }
 
-  private _app?: App2
-  get app(): App2 {
-    return (this._app ??= new App2({ client: this.client }))
+  private _app?: App
+  get app(): App {
+    return (this._app ??= new App({ client: this.client }))
   }
 
   private _lsp?: Lsp
