@@ -327,6 +327,8 @@ export const dict = {
   "dialog.project.github_app.install.title": "Install GitHub App",
   "dialog.project.github_app.install.description":
     "Install the GitHub App on your account or organization to grant access to repositories.",
+  "dialog.project.github_app.install.instruction":
+    "Click the button below to install {{name}} on your GitHub account and grant access to repositories.",
   "dialog.project.github_app.install.button": "Install on GitHub",
   "dialog.project.github_app.manage.title": "Manage GitHub App",
   "dialog.project.github_app.manage.installations": "Installations",

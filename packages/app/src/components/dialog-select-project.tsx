@@ -19,7 +19,7 @@ import { useGitHubProjects } from "@/context/github-projects"
 // Types
 // ============================================================================
 
-type ProviderType = "local" | "github" | "add_github" | "github_app_setup"
+type ProviderType = "local" | "github" | "github_uninstalled" | "add_github" | "github_app_setup"
 
 interface ProviderItem {
   type: ProviderType
@@ -162,6 +162,17 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
             },
           })
         }
+      } else {
+        result.push({
+          type: "github_uninstalled" as const,
+          id: `${provider.id}_uninstalled`,
+          name: provider.slug,
+          description: "Click to install",
+          providerData: {
+            providerId: provider.id,
+            slug: provider.slug,
+          },
+        })
       }
     }
 
@@ -212,6 +223,20 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
         ),
         undefined,
       )
+    } else if (provider.type === "github_uninstalled") {
+      dialog.show(() => (
+        <DialogInstallGithubApp
+          providerId={provider.providerData?.providerId || ""}
+          slug={provider.providerData?.slug || ""}
+          onBack={() => {
+            dialog.show(() => <DialogSelectProjectProvider onSelect={() => {}} />)
+          }}
+          onInstalled={() => {
+            dialog.close()
+            dialog.show(() => <DialogSelectProjectProvider onSelect={() => {}} />)
+          }}
+        />
+      ))
     } else {
       dialog.show(() => (
         <DialogSelectGithubRepo
@@ -346,6 +371,48 @@ function DialogAddGithubKey(props: { onComplete?: () => void; onBack?: () => voi
           </Button>
         </div>
       </form>
+    </Dialog>
+  )
+}
+
+// ============================================================================
+// DialogInstallGithubApp - Install the GitHub App
+// ============================================================================
+
+function DialogInstallGithubApp(props: {
+  providerId: string
+  slug: string
+  onBack?: () => void
+  onInstalled?: () => void
+}) {
+  const language = useLanguage()
+  const globalSDK = useGlobalSDK()
+
+  function handleInstall() {
+    const installUrl = `https://github.com/apps/${props.slug}/installations/new`
+    window.open(installUrl, "_blank")
+    props.onInstalled?.()
+  }
+
+  return (
+    <Dialog
+      title={language.t("dialog.project.github_app.install.title")}
+      description={language.t("dialog.project.github_app.install.description")}
+    >
+      <div class="flex flex-col gap-6 p-6 pt-0">
+        <div class="text-14-regular text-text-weak">
+          {language.t("dialog.project.github_app.install.instruction", { name: props.slug })}
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <Button type="button" variant="secondary" size="large" onClick={props.onBack}>
+            {language.t("common.back")}
+          </Button>
+          <Button type="button" variant="primary" size="large" onClick={handleInstall}>
+            {language.t("dialog.project.github_app.install.button")}
+          </Button>
+        </div>
+      </div>
     </Dialog>
   )
 }
