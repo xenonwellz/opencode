@@ -85,7 +85,6 @@ export const GithubProviderRoutes = lazy(() => {
       async (c) => {
         const { organization } = c.req.valid("json")
         const redirectUrl = `${c.req.url.replace(c.req.path, "")}/callback`
-        const url = await GithubProvider.getCreationUrl(redirectUrl, organization)
 
         const provider = await add({
           type: "github",
@@ -96,11 +95,9 @@ export const GithubProviderRoutes = lazy(() => {
           privateKey: "",
         })
 
-        const callbackUrl = new URL(url)
-        callbackUrl.searchParams.set("state", provider.id)
-        const finalUrl = callbackUrl.toString()
+        const url = await GithubProvider.getCreationUrl(redirectUrl, provider.id, organization)
 
-        return c.json({ url: finalUrl, providerId: provider.id })
+        return c.json({ url, providerId: provider.id })
       },
     )
     .get(

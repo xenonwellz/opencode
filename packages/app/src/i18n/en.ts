@@ -307,8 +307,8 @@ export const dict = {
   "dialog.project.add_github.name.placeholder": "My GitHub Token",
   "dialog.project.add_github.token.label": "Personal Access Token",
   "dialog.project.add_github.token.placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
-  "dialog.project.add_github.button.add": "Add provider",
-  "dialog.project.add_github.button.adding": "Adding...",
+  "dialog.project.add_github.button.create": "Create GitHub App",
+  "dialog.project.add_github.button.creating": "Creating...",
   "dialog.project.add_github.app_instruction":
     "Create a GitHub App to access repositories. This will redirect you to GitHub to set up the app.",
   "dialog.project.add_github.organization.label": "Organization (optional)",

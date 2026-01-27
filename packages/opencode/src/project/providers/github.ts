@@ -46,14 +46,14 @@ export function createOctokit(provider: Provider, installationId?: number): Octo
   })
 }
 
-export async function getCreationUrl(redirectUrl: string, organization?: string): Promise<string> {
+export async function getCreationUrl(redirectUrl: string, providerId: string, organization?: string): Promise<string> {
   const suffix = Math.random().toString(36).slice(2, 6).toUpperCase()
   const manifest = {
     name: `OPENCODE-HOST-${suffix}`,
     description: `OpenCode AI coding assistant`,
     url: redirectUrl,
-    redirect_url: redirectUrl,
-    callback_urls: [redirectUrl],
+    redirect_url: `${redirectUrl}?state=${providerId}`,
+    callback_urls: [`${redirectUrl}?state=${providerId}`],
     public: false,
     default_permissions: {
       contents: "write",
@@ -111,10 +111,10 @@ export async function listInstallations(provider: Provider): Promise<Installatio
       id: inst.id,
       account: account
         ? {
-          login: "login" in account ? account.login || "" : "",
-          avatar_url: account.avatar_url ?? undefined,
-          name: "name" in account ? (account.name ?? undefined) : undefined,
-        }
+            login: "login" in account ? account.login || "" : "",
+            avatar_url: account.avatar_url ?? undefined,
+            name: "name" in account ? (account.name ?? undefined) : undefined,
+          }
         : null,
       target_type: inst.target_type ?? undefined,
       suspended_at: inst.suspended_at ?? undefined,
@@ -131,10 +131,10 @@ export async function getInstallation(provider: Provider, installationId: number
       id: response.data.id,
       account: account
         ? {
-          login: "login" in account ? account.login || "" : "",
-          avatar_url: account.avatar_url ?? undefined,
-          name: "name" in account ? (account.name ?? undefined) : undefined,
-        }
+            login: "login" in account ? account.login || "" : "",
+            avatar_url: account.avatar_url ?? undefined,
+            name: "name" in account ? (account.name ?? undefined) : undefined,
+          }
         : null,
       target_type: response.data.target_type ?? undefined,
       suspended_at: response.data.suspended_at ?? undefined,

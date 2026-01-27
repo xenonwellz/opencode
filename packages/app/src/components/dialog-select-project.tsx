@@ -154,7 +154,7 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
             type: "github" as const,
             id: `${provider.id}_${inst.id}`,
             name: inst.account?.login || inst.account?.name || `Installation ${inst.id}`,
-            description: `${provider.slug} (${inst.account?.login || "GitHub App"})`,
+            description: inst.account?.login || undefined,
             providerData: {
               providerId: provider.id,
               installationId: inst.id,
@@ -175,23 +175,10 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
     description: language.t("dialog.project.provider.add.description"),
   }))
 
-  const githubAppItem = createMemo<ProviderItem | null>(() => {
-    if (store.providers.length === 0) return null
-    const totalInstallations = store.providers.reduce((acc, p) => acc + (store.installations[p.id]?.length || 0), 0)
-    return {
-      type: "github_app_setup" as const,
-      id: "github_app_setup",
-      name: language.t("dialog.project.github_app.manage.title"),
-      description: `${store.providers.length} provider(s), ${totalInstallations} installation(s)`,
-    }
-  })
-
   const allItems = createMemo<ProviderItem[]>(() => {
     const result = [...items()]
     const addItem = addGithubItem()
     if (addItem) result.push(addItem)
-    const appItem = githubAppItem()
-    if (appItem) result.push(appItem)
     return result
   })
 
@@ -210,25 +197,16 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
           }}
         />
       ))
-    } else if (provider.type === "github_app_setup") {
-      dialog.show(() => (
-        <DialogGithubAppSetup
-          onComplete={() => {
-            dialog.close()
-            dialog.show(() => <DialogSelectProjectProvider multiple={props.multiple} onSelect={props.onSelect} />)
-          }}
-          onBack={() => {
-            dialog.show(() => <DialogSelectProjectProvider multiple={props.multiple} onSelect={props.onSelect} />)
-          }}
-        />
-      ))
     } else if (provider.type === "add_github") {
       dialog.show(
         () => (
-          <DialogSelectProjectProviderType
-            onBack={() => {
+          <DialogAddGithubKey
+            onComplete={() => {
               dialog.close()
-              dialog.show(() => <DialogSelectProjectProvider multiple={props.multiple} onSelect={props.onSelect} />)
+              dialog.show(() => <DialogSelectProjectProvider onSelect={() => {}} />)
+            }}
+            onBack={() => {
+              dialog.show(() => <DialogSelectProjectProvider onSelect={() => {}} />)
             }}
           />
         ),
@@ -284,76 +262,13 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
 }
 
 // ============================================================================
-// DialogSelectProjectProviderType
-// ============================================================================
-
-type ProviderTypeListItem = BackItem | ProviderTypeItem
-
-function DialogSelectProjectProviderType(props: { onBack: () => void }) {
-  const dialog = useDialog()
-  const language = useLanguage()
-
-  function handleSelect(item: ProviderTypeListItem) {
-    if ("type" in item && item.type === "back") {
-      props.onBack()
-      return
-    }
-    if (item.id === "github") {
-      dialog.show(() => (
-        <DialogAddGithubKey
-          onComplete={() => {
-            dialog.close()
-            props.onBack()
-          }}
-          onBack={() => {
-            dialog.show(() => <DialogSelectProjectProviderType onBack={props.onBack} />)
-          }}
-        />
-      ))
-    }
-  }
-
-  const items = createMemo<ProviderTypeListItem[]>(() => [
-    { id: "__back__", name: language.t("dialog.directory.back"), type: "back" as const },
-    ...providerTypes,
-  ])
-
-  return (
-    <Dialog
-      title={language.t("dialog.project.select_provider.title")}
-      description={language.t("dialog.project.select_provider.description")}
-    >
-      <List
-        search={{ placeholder: language.t("dialog.project.search.placeholder"), autofocus: true }}
-        items={items}
-        filterKeys={["name"]}
-        key={(x) => x.id}
-        onSelect={(item) => {
-          if (!item) return
-          handleSelect(item as ProviderTypeListItem)
-        }}
-      >
-        {(item) => (
-          <div class="w-full flex items-center gap-x-3">
-            <Icon
-              name={"type" in item && item.type === "back" ? "arrow-left" : ((item as ProviderTypeItem).icon as any)}
-              class="shrink-0 size-4 text-text-weak"
-            />
-            <span>{item.name}</span>
-          </div>
-        )}
-      </List>
-    </Dialog>
-  )
-}
-
-// ============================================================================
-// DialogAddGithubKey - Now creates GitHub App Provider instead of PAT key
+// DialogAddGithubKey - Creates GitHub App Provider
 // ============================================================================
 
 function DialogAddGithubKey(props: { onComplete?: () => void; onBack?: () => void }) {
   const globalSDK = useGlobalSDK()
   const language = useLanguage()
+  const dialog = useDialog()
 
   const [store, setStore] = createStore({
     organization: "",
@@ -392,7 +307,7 @@ function DialogAddGithubKey(props: { onComplete?: () => void; onBack?: () => voi
   }
 
   function handleBack() {
-    props.onBack?.()
+    dialog.show(() => <DialogSelectProjectProvider onSelect={() => {}} />)
   }
 
   return (
@@ -401,9 +316,7 @@ function DialogAddGithubKey(props: { onComplete?: () => void; onBack?: () => voi
       description={language.t("dialog.project.add_github.description")}
     >
       <form onSubmit={handleSubmit} class="flex flex-col gap-6 p-6 pt-0">
-        <div class="flex flex-col gap-4">
-          <div class="text-14-regular text-text-weak">{language.t("dialog.project.add_github.app_instruction")}</div>
-        </div>
+        <div class="text-14-regular text-text-weak">{language.t("dialog.project.add_github.app_instruction")}</div>
 
         <TextField
           label={language.t("dialog.project.add_github.organization.label")}
@@ -424,10 +337,10 @@ function DialogAddGithubKey(props: { onComplete?: () => void; onBack?: () => voi
             {language.t("common.back")}
           </Button>
           <Button type="submit" variant="primary" size="large" disabled={store.loading}>
-            <Show when={store.loading} fallback={language.t("dialog.project.add_github.button.add")}>
+            <Show when={store.loading} fallback={language.t("dialog.project.add_github.button.create")}>
               <div class="flex items-center gap-2">
-                <div class="size-4 animate-spin border-2 border-text-strong border-t-transparent rounded-full" />
-                {language.t("dialog.project.add_github.button.adding")}
+                <Spinner class="size-4" />
+                {language.t("dialog.project.add_github.button.creating")}
               </div>
             </Show>
           </Button>
