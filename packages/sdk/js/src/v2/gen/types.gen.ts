@@ -1993,12 +1993,21 @@ export type ProviderAuthAuthorization = {
   instructions: string
 }
 
-export type GithubKey = {
-  name: string
-  token: string
-  type: "classic" | "fine-grained"
-  createdAt: number
-}
+export type GithubKey =
+  | {
+      name: string
+      token: string
+      type: "classic" | "fine-grained"
+      createdAt: number
+    }
+  | {
+      name: string
+      installationId: number
+      accountName: string
+      accountAvatar?: string
+      type: "installation"
+      createdAt: number
+    }
 
 export type Symbol = {
   name: string
@@ -4086,6 +4095,91 @@ export type GithubKeysDeleteResponses = {
 }
 
 export type GithubKeysDeleteResponse = GithubKeysDeleteResponses[keyof GithubKeysDeleteResponses]
+
+export type GithubAppConfigDeleteData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/app/config"
+}
+
+export type GithubAppConfigGetData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/app/config"
+}
+
+export type GithubAppConfigGetResponses = {
+  /**
+   * GitHub App config
+   */
+  200: {
+    appId: number
+    slug: string
+    clientId: string
+    createdAt: number
+  }
+}
+
+export type GithubAppConfigGetResponse = GithubAppConfigGetResponses[keyof GithubAppConfigGetResponses]
+
+export type GithubAppSetupData = {
+  body?: {
+    redirectUrl: string
+    organization?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/app/setup"
+}
+
+export type GithubAppSetupResponses = {
+  /**
+   * GitHub App creation URL
+   */
+  200: {
+    url: string
+  }
+}
+
+export type GithubAppSetupResponse = GithubAppSetupResponses[keyof GithubAppSetupResponses]
+
+export type GithubAppCallbackData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    code: string
+  }
+  url: "/github/app/callback"
+}
+
+export type GithubAppInstallationsListData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/app/installations"
+}
+
+export type GithubAppInstallationsRegisterData = {
+  body?: never
+  path: {
+    installationId: number
+  }
+  query?: {
+    directory?: string
+  }
+  url: "/github/app/installations/{installationId}/register"
+}
 
 export type GithubReposListData = {
   body?: never

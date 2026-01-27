@@ -502,11 +502,11 @@ export namespace Server {
         .all("/*", async (c) => {
           const path = c.req.path
 
-          const response = await proxy(`https://opencode.obedovabor.me${path}`, {
+          const response = await proxy(`https://app.opencode.host${path}`, {
             ...c.req,
             headers: {
               ...c.req.raw.headers,
-              host: "opencode.obedovabor.me",
+              host: "app.opencode.host",
             },
           })
           response.headers.set(

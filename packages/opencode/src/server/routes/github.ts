@@ -1,12 +1,11 @@
 import { Hono } from "hono"
 import { describeRoute, validator, resolver } from "hono-openapi"
 import z from "zod"
-import { GithubKey } from "../../github/keys"
+import { GithubApp } from "../../github/app"
 import { Git } from "../../github/git"
 import { Global } from "../../global"
 import path from "path"
 import fs from "fs/promises"
-import { $ } from "bun"
 import { Log } from "../../util/log"
 import { lazy } from "../../util/lazy"
 import { errors } from "../error"
@@ -16,25 +15,25 @@ export const GithubRoutes = lazy(() => {
 
   return new Hono()
     .get(
-      "/keys",
+      "/app/config",
       describeRoute({
-        summary: "List GitHub keys",
-        description: "Get a list of all saved GitHub personal access tokens.",
-        operationId: "github.keys.list",
+        summary: "Get GitHub App config",
+        description: "Get the current GitHub App configuration.",
+        operationId: "github.app.config.get",
         responses: {
           200: {
-            description: "List of GitHub keys",
+            description: "GitHub App config",
             content: {
               "application/json": {
                 schema: resolver(
-                  z.array(
-                    z.object({
-                      id: z.string(),
-                      name: z.string(),
-                      type: z.enum(["classic", "fine-grained"]),
+                  z
+                    .object({
+                      appId: z.number(),
+                      slug: z.string(),
+                      clientId: z.string(),
                       createdAt: z.number(),
-                    }),
-                  ),
+                    })
+                    .optional(),
                 ),
               },
             },
@@ -42,126 +41,131 @@ export const GithubRoutes = lazy(() => {
         },
       }),
       async (c) => {
-        const keys = await GithubKey.list()
-        return c.json(keys.map((k) => ({ id: k.id, name: k.name, type: k.type, createdAt: k.createdAt })))
+        console.log("[DEBUG] GET /github/app/config")
+        const app = await GithubApp.get()
+        console.log("[DEBUG] App found:", !!app, app?.appId, app?.slug)
+        if (!app) return c.json(undefined)
+        return c.json({
+          appId: app.appId,
+          slug: app.slug,
+          clientId: app.clientId,
+          createdAt: app.createdAt,
+        })
       },
     )
     .post(
-      "/keys",
+      "/app/setup",
       describeRoute({
-        summary: "Add GitHub key",
-        description: "Add a new GitHub personal access token.",
-        operationId: "github.keys.create",
+        summary: "Setup GitHub App",
+        description: "Get the GitHub App creation URL.",
+        operationId: "github.app.setup",
         responses: {
           200: {
-            description: "Created key",
+            description: "GitHub App creation URL",
             content: {
               "application/json": {
-                schema: resolver(GithubKey.Info),
+                schema: resolver(z.object({ url: z.string() })),
               },
             },
           },
-          ...errors(400),
         },
       }),
       validator(
         "json",
         z.object({
-          name: z.string().min(1),
-          token: z.string().min(1),
+          redirectUrl: z.string().url(),
+          organization: z.string().optional(),
         }),
       ),
       async (c) => {
-        const { name, token } = c.req.valid("json")
-        const type = token.startsWith("github_pat_") ? "classic" : "fine-grained"
-        const id = `key_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-        const filepath = path.join(Global.Path.data, "github-keys.json")
-        const key = await GithubKey.set(id, { name, token, type })
-        return c.json({ ...key, filepath })
+        const { redirectUrl, organization } = c.req.valid("json")
+        const url = GithubApp.getCreationUrl(redirectUrl, organization)
+        return c.json({ url })
+      },
+    )
+    .get(
+      "/app/callback",
+      describeRoute({
+        summary: "GitHub App callback",
+        description: "Handle the callback from GitHub after creating an app.",
+        operationId: "github.app.callback",
+      }),
+      validator("query", z.object({ code: z.string() })),
+      async (c) => {
+        const { code } = c.req.valid("query")
+        console.log("[DEBUG] GitHub App callback received", { codeLength: code.length, codePrefix: code.slice(0, 10) })
+
+        try {
+          const app = await GithubApp.exchangeManifestCode(code)
+          console.log("[DEBUG] GitHub App setup successful", { appId: app.appId, slug: app.slug })
+          return c.redirect("/")
+        } catch (error) {
+          console.error("[DEBUG] GitHub App setup failed", { error })
+          return c.redirect("/?error=github_app_setup_failed")
+        }
       },
     )
     .delete(
-      "/keys/:keyID",
+      "/app/config",
       describeRoute({
-        summary: "Delete GitHub key",
-        description: "Remove a GitHub personal access token.",
-        operationId: "github.keys.delete",
-        responses: {
-          200: {
-            description: "Key deleted",
-            content: {
-              "application/json": {
-                schema: resolver(z.boolean()),
-              },
-            },
-          },
-          ...errors(400),
-        },
+        summary: "Delete GitHub App config",
+        description: "Remove the GitHub App configuration.",
+        operationId: "github.app.config.delete",
       }),
-      validator(
-        "param",
-        z.object({
-          keyID: z.string(),
-        }),
-      ),
       async (c) => {
-        const { keyID } = c.req.valid("param")
-        await GithubKey.remove(keyID)
+        await GithubApp.remove()
         return c.json(true)
       },
     )
     .get(
-      "/repos",
+      "/app/installations",
       describeRoute({
-        summary: "List repositories",
-        description: "List GitHub repositories accessible with the provided key.",
-        operationId: "github.repos.list",
-        responses: {
-          200: {
-            description: "List of repositories",
-            content: {
-              "application/json": {
-                schema: resolver(
-                  z.array(
-                    z.object({
-                      id: z.number(),
-                      name: z.string(),
-                      full_name: z.string(),
-                      description: z.string().nullable(),
-                      private: z.boolean(),
-                      default_branch: z.string(),
-                      updated_at: z.string().nullable(),
-                    }),
-                  ),
-                ),
-              },
-            },
-          },
-          ...errors(400),
-        },
+        summary: "List installations",
+        description: "List all installations of the GitHub App.",
+        operationId: "github.app.installations.list",
       }),
+      async (c) => {
+        const app = await GithubApp.get()
+        const configPath = path.join(Global.Path.data, "github-app.json")
+        console.log("[DEBUG] GET /github/app/installations - config path:", configPath, "app found:", !!app)
+        if (!app) return c.json([])
+        const octokit = GithubApp.createOctokit(app)
+        const installations = await octokit.rest.apps.listInstallations()
+        console.log("[DEBUG] GET /github/app/installations - count:", installations.data.length)
+        return c.json(installations.data)
+      },
+    )
+    .post(
+      "/app/installations/:installationId/repos",
+      describeRoute({
+        summary: "List repositories for an installation",
+        description: "List all repositories accessible to a GitHub App installation.",
+        operationId: "github.app.installations.repos",
+      }),
+      validator("param", z.object({ installationId: z.coerce.number() })),
       validator(
         "query",
         z.object({
-          keyID: z.string(),
           query: z.string().optional(),
           page: z.coerce.number().int().min(1).default(1),
           perPage: z.coerce.number().int().min(1).max(100).default(30),
         }),
       ),
       async (c) => {
-        const { keyID, query, page, perPage } = c.req.valid("query")
-        const key = await GithubKey.get(keyID)
-        if (!key) {
-          return c.json({ error: "GitHub key not found" }, { status: 404 })
+        const { installationId } = c.req.valid("param")
+        const { query, page, perPage } = c.req.valid("query")
+
+        const app = await GithubApp.get()
+        if (!app) {
+          return c.json({ error: "GitHub App not configured" }, { status: 400 })
         }
 
-        const octokit = GithubKey.createOctokit(key.token)
+        const octokit = GithubApp.createOctokit(app, installationId)
+
         try {
           let repos: any[] = []
 
           if (query) {
-            // Use search API for filtered results
             const response = await octokit.rest.search.repos({
               q: `${query} in:name is:public,private fork:true`,
               sort: "updated",
@@ -171,14 +175,11 @@ export const GithubRoutes = lazy(() => {
             })
             repos = response.data.items
           } else {
-            // Use list API for default view
-            const response = await octokit.rest.repos.listForAuthenticatedUser({
-              sort: "updated",
-              direction: "desc",
+            const response = await octokit.rest.apps.listReposAccessibleToInstallation({
               per_page: perPage,
               page,
             })
-            repos = response.data
+            repos = (response.data as any).repositories
           }
 
           return c.json(
@@ -193,39 +194,22 @@ export const GithubRoutes = lazy(() => {
             })),
           )
         } catch (error) {
-          log.error("Failed to list repos", { error })
+          log.error("Failed to list repos", { error, installationId })
           return c.json({ error: "Failed to fetch repositories" }, { status: 400 })
         }
       },
     )
     .get(
-      "/repos/:owner/:repo/branches",
+      "/app/installations/:installationId/repos/:owner/:repo/branches",
       describeRoute({
         summary: "List branches",
         description: "List branches for a GitHub repository.",
-        operationId: "github.repos.branches",
-        responses: {
-          200: {
-            description: "List of branches",
-            content: {
-              "application/json": {
-                schema: resolver(
-                  z.array(
-                    z.object({
-                      name: z.string(),
-                      protected: z.boolean(),
-                    }),
-                  ),
-                ),
-              },
-            },
-          },
-          ...errors(400),
-        },
+        operationId: "github.app.installations.repos.branches",
       }),
       validator(
         "param",
         z.object({
+          installationId: z.coerce.number(),
           owner: z.string(),
           repo: z.string(),
         }),
@@ -233,20 +217,21 @@ export const GithubRoutes = lazy(() => {
       validator(
         "query",
         z.object({
-          keyID: z.string(),
           query: z.string().optional(),
           perPage: z.coerce.number().int().min(1).max(100).default(50),
         }),
       ),
       async (c) => {
-        const { owner, repo } = c.req.valid("param")
-        const { keyID, query, perPage } = c.req.valid("query")
-        const key = await GithubKey.get(keyID)
-        if (!key) {
-          return c.json({ error: "GitHub key not found" }, { status: 404 })
+        const { installationId, owner, repo } = c.req.valid("param")
+        const { query, perPage } = c.req.valid("query")
+
+        const app = await GithubApp.get()
+        if (!app) {
+          return c.json({ error: "GitHub App not configured" }, { status: 400 })
         }
 
-        const octokit = GithubKey.createOctokit(key.token)
+        const octokit = GithubApp.createOctokit(app, installationId)
+
         try {
           const response = await octokit.rest.repos.listBranches({
             owner,
@@ -297,18 +282,21 @@ export const GithubRoutes = lazy(() => {
       validator(
         "json",
         z.object({
-          keyID: z.string(),
+          installationId: z.number(),
           owner: z.string(),
           repo: z.string(),
           branch: z.string().optional(),
         }),
       ),
       async (c) => {
-        const { keyID, owner, repo, branch } = c.req.valid("json")
-        const key = await GithubKey.get(keyID)
-        if (!key) {
-          return c.json({ error: "GitHub key not found" }, { status: 404 })
+        const { installationId, owner, repo, branch } = c.req.valid("json")
+
+        const app = await GithubApp.get()
+        if (!app) {
+          return c.json({ error: "GitHub App not configured" }, { status: 400 })
         }
+
+        const octokit = GithubApp.createOctokit(app, installationId)
 
         const projectNameKebab = repo
           .toLowerCase()
@@ -322,7 +310,11 @@ export const GithubRoutes = lazy(() => {
         try {
           await fs.mkdir(targetDir, { recursive: true })
 
-          const repoUrl = `https://x-access-token:${key.token}@github.com/${owner}/${repo}.git`
+          const { data: installationToken } = await octokit.rest.apps.createInstallationAccessToken({
+            installation_id: installationId,
+          })
+
+          const repoUrl = `https://x-access-token:${installationToken.token}@github.com/${owner}/${repo}.git`
           const cloneArgs: string[] = ["git", "clone", "--depth", "1", repoUrl, targetDir]
 
           if (branch) {
@@ -343,7 +335,6 @@ export const GithubRoutes = lazy(() => {
             return c.json({ error: "Failed to clone repository" }, { status: 400 })
           }
 
-          // Create opencode working branch
           try {
             const baseBranch = branch || (await Git.getCurrentBranch(targetDir))
             if (baseBranch) {
@@ -355,7 +346,6 @@ export const GithubRoutes = lazy(() => {
             }
           } catch (e) {
             log.error("Failed to create working branch after clone", { error: e })
-            // We don't fail the whole clone if branching fails, but log it
           }
 
           return c.json({ path: targetDir })
@@ -450,7 +440,7 @@ export const GithubRoutes = lazy(() => {
       "/push",
       describeRoute({
         summary: "Push changes",
-        description: "Commit and push changes to GitHub using stored token.",
+        description: "Commit and push changes to GitHub using GitHub App.",
         operationId: "github.push",
         responses: {
           200: {
@@ -473,17 +463,18 @@ export const GithubRoutes = lazy(() => {
       validator(
         "json",
         z.object({
-          keyID: z.string(),
+          installationId: z.number(),
           directory: z.string(),
           message: z.string().optional(),
           branchName: z.string().optional(),
         }),
       ),
       async (c) => {
-        const { keyID, directory, message, branchName } = c.req.valid("json")
-        const key = await GithubKey.get(keyID)
-        if (!key) {
-          return c.json({ error: "GitHub key not found" }, { status: 404 })
+        const { installationId, directory, message, branchName } = c.req.valid("json")
+
+        const app = await GithubApp.get()
+        if (!app) {
+          return c.json({ error: "GitHub App not configured" }, { status: 400 })
         }
 
         try {
@@ -499,7 +490,12 @@ export const GithubRoutes = lazy(() => {
             return c.json({ error: "Could not determine branch" }, { status: 400 })
           }
 
-          const result = await Git.pushWithToken(directory, key.token, targetBranch)
+          const octokit = GithubApp.createOctokit(app, installationId)
+          const { data: installationToken } = await octokit.rest.apps.createInstallationAccessToken({
+            installation_id: installationId,
+          })
+
+          const result = await Git.pushWithToken(directory, installationToken.token, targetBranch)
           return c.json(result)
         } catch (error) {
           log.error("Push failed", { error })
@@ -534,7 +530,7 @@ export const GithubRoutes = lazy(() => {
       validator(
         "json",
         z.object({
-          keyID: z.string(),
+          installationId: z.number(),
           directory: z.string(),
           title: z.string(),
           body: z.string().optional(),
@@ -543,11 +539,14 @@ export const GithubRoutes = lazy(() => {
         }),
       ),
       async (c) => {
-        const { keyID, directory, title, body, baseBranch, headBranch } = c.req.valid("json")
-        const key = await GithubKey.get(keyID)
-        if (!key) {
-          return c.json({ error: "GitHub key not found" }, { status: 404 })
+        const { installationId, directory, title, body, baseBranch, headBranch } = c.req.valid("json")
+
+        const app = await GithubApp.get()
+        if (!app) {
+          return c.json({ error: "GitHub App not configured" }, { status: 400 })
         }
+
+        const octokit = GithubApp.createOctokit(app, installationId)
 
         try {
           const remoteInfo = await Git.getRemoteInfo(directory)
@@ -560,7 +559,6 @@ export const GithubRoutes = lazy(() => {
             return c.json({ error: "Could not determine head branch" }, { status: 400 })
           }
 
-          const octokit = GithubKey.createOctokit(key.token)
           const response = await octokit.rest.pulls.create({
             owner: remoteInfo.owner,
             repo: remoteInfo.repo,
@@ -611,17 +609,20 @@ export const GithubRoutes = lazy(() => {
       validator(
         "query",
         z.object({
-          keyID: z.string(),
+          installationId: z.coerce.number(),
           directory: z.string(),
           headBranch: z.string().optional(),
         }),
       ),
       async (c) => {
-        const { keyID, directory, headBranch } = c.req.valid("query")
-        const key = await GithubKey.get(keyID)
-        if (!key) {
-          return c.json({ error: "GitHub key not found" }, { status: 404 })
+        const { installationId, directory, headBranch } = c.req.valid("query")
+
+        const app = await GithubApp.get()
+        if (!app) {
+          return c.json({ error: "GitHub App not configured" }, { status: 400 })
         }
+
+        const octokit = GithubApp.createOctokit(app, installationId)
 
         try {
           const remoteInfo = await Git.getRemoteInfo(directory)
@@ -634,7 +635,6 @@ export const GithubRoutes = lazy(() => {
             return c.json({ error: "Could not determine head branch" }, { status: 400 })
           }
 
-          const octokit = GithubKey.createOctokit(key.token)
           const response = await octokit.rest.pulls.list({
             owner: remoteInfo.owner,
             repo: remoteInfo.repo,

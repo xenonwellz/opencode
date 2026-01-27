@@ -12,7 +12,7 @@ import type {
   AuthSetErrors,
   AuthSetResponses,
   CommandListResponses,
-  Config as Config2,
+  Config as Config3,
   ConfigGetResponses,
   ConfigProvidersResponses,
   ConfigUpdateErrors,
@@ -33,6 +33,8 @@ import type {
   FindSymbolsResponses,
   FindTextResponses,
   FormatterStatusResponses,
+  GithubAppConfigGetResponses,
+  GithubAppSetupResponses,
   GithubCloneErrors,
   GithubCloneResponses,
   GithubKeysCreateErrors,
@@ -590,7 +592,7 @@ export class Config extends HeyApiClient {
   public update<ThrowOnError extends boolean = false>(
     parameters?: {
       directory?: string
-      config?: Config2
+      config?: Config3
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -2168,6 +2170,176 @@ export class Keys extends HeyApiClient {
   }
 }
 
+export class Config2 extends HeyApiClient {
+  /**
+   * Delete GitHub App config
+   *
+   * Remove the GitHub App configuration.
+   */
+  public delete<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "directory" }] }])
+    return (options?.client ?? this.client).delete<unknown, unknown, ThrowOnError>({
+      url: "/github/app/config",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get GitHub App config
+   *
+   * Get the current GitHub App configuration.
+   */
+  public get<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "directory" }] }])
+    return (options?.client ?? this.client).get<GithubAppConfigGetResponses, unknown, ThrowOnError>({
+      url: "/github/app/config",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Installations extends HeyApiClient {
+  /**
+   * List installations
+   *
+   * List all installations of the GitHub App.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "directory" }] }])
+    return (options?.client ?? this.client).get<unknown, unknown, ThrowOnError>({
+      url: "/github/app/installations",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Register installation
+   *
+   * Register a GitHub App installation as a key.
+   */
+  public register<ThrowOnError extends boolean = false>(
+    parameters: {
+      installationId: number
+      directory?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installationId" },
+            { in: "query", key: "directory" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<unknown, unknown, ThrowOnError>({
+      url: "/github/app/installations/{installationId}/register",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class App extends HeyApiClient {
+  /**
+   * Setup GitHub App
+   *
+   * Get the GitHub App creation URL.
+   */
+  public setup<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      redirectUrl?: string
+      organization?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "body", key: "redirectUrl" },
+            { in: "body", key: "organization" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<GithubAppSetupResponses, unknown, ThrowOnError>({
+      url: "/github/app/setup",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * GitHub App callback
+   *
+   * Handle the callback from GitHub after creating an app.
+   */
+  public callback<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      code: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "code" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<unknown, unknown, ThrowOnError>({
+      url: "/github/app/callback",
+      ...options,
+      ...params,
+    })
+  }
+
+  private _config?: Config2
+  get config(): Config2 {
+    return (this._config ??= new Config2({ client: this.client }))
+  }
+
+  private _installations?: Installations
+  get installations(): Installations {
+    return (this._installations ??= new Installations({ client: this.client }))
+  }
+}
+
 export class Repos extends HeyApiClient {
   /**
    * List repositories
@@ -2471,6 +2643,11 @@ export class Github extends HeyApiClient {
   private _keys?: Keys
   get keys(): Keys {
     return (this._keys ??= new Keys({ client: this.client }))
+  }
+
+  private _app?: App
+  get app(): App {
+    return (this._app ??= new App({ client: this.client }))
   }
 
   private _repos?: Repos
@@ -3371,7 +3548,7 @@ export class Command extends HeyApiClient {
   }
 }
 
-export class App extends HeyApiClient {
+export class App2 extends HeyApiClient {
   /**
    * Write log
    *
@@ -3674,9 +3851,9 @@ export class OpencodeClient extends HeyApiClient {
     return (this._command ??= new Command({ client: this.client }))
   }
 
-  private _app?: App
-  get app(): App {
-    return (this._app ??= new App({ client: this.client }))
+  private _app?: App2
+  get app(): App2 {
+    return (this._app ??= new App2({ client: this.client }))
   }
 
   private _lsp?: Lsp
