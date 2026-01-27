@@ -577,7 +577,6 @@ export default function Layout(props: ParentProps) {
         openProject(next.worktree, false)
         navigateToProject(next.worktree)
       },
-      { defer: true },
     ),
   )
 
