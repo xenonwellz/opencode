@@ -307,11 +307,21 @@ export const dict = {
   "dialog.project.add_github.name.placeholder": "My GitHub Token",
   "dialog.project.add_github.token.label": "Personal Access Token",
   "dialog.project.add_github.token.placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
-  "dialog.project.add_github.button.add": "Add key",
+  "dialog.project.add_github.button.add": "Add provider",
   "dialog.project.add_github.button.adding": "Adding...",
+  "dialog.project.add_github.app_instruction":
+    "Create a GitHub App to access repositories. This will redirect you to GitHub to set up the app.",
+  "dialog.project.add_github.organization.label": "Organization (optional)",
+  "dialog.project.add_github.organization.placeholder": "Leave empty for personal",
+  "dialog.project.add_github.organization.description":
+    "Enter your organization name to create the app under an organization. Leave empty to create a personal app.",
   "dialog.project.github_app.setup.title": "Setup GitHub App",
   "dialog.project.github_app.setup.description":
     "Create a GitHub App to access repositories without personal access tokens. This provides better security and organization-level access.",
+  "dialog.project.github_app.setup.organization.label": "Organization (optional)",
+  "dialog.project.github_app.setup.organization.placeholder": "Leave empty for personal",
+  "dialog.project.github_app.setup.organization.description":
+    "Enter your organization name to create the app under an organization.",
   "dialog.project.github_app.setup.button": "Create GitHub App",
   "dialog.project.github_app.setup.button.loading": "Creating...",
   "dialog.project.github_app.install.title": "Install GitHub App",

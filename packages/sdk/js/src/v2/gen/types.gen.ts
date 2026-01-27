@@ -4336,7 +4336,6 @@ export type GithubStatusResponse = GithubStatusResponses[keyof GithubStatusRespo
 
 export type GithubPushData = {
   body?: {
-    installationId: number
     directory: string
     message?: string
     branchName?: string
@@ -4375,7 +4374,6 @@ export type GithubPullRequestsGetData = {
   path?: never
   query: {
     directory: string
-    installationId: number
     headBranch?: string
   }
   url: "/github/pull-requests"
@@ -4406,7 +4404,6 @@ export type GithubPullRequestsGetResponse = GithubPullRequestsGetResponses[keyof
 
 export type GithubPullRequestsCreateData = {
   body?: {
-    installationId: number
     directory: string
     title: string
     body?: string

@@ -2406,7 +2406,6 @@ export class PullRequests extends HeyApiClient {
   public get<ThrowOnError extends boolean = false>(
     parameters: {
       directory: string
-      installationId: number
       headBranch?: string
     },
     options?: Options<never, ThrowOnError>,
@@ -2417,7 +2416,6 @@ export class PullRequests extends HeyApiClient {
         {
           args: [
             { in: "query", key: "directory" },
-            { in: "query", key: "installationId" },
             { in: "query", key: "headBranch" },
           ],
         },
@@ -2442,7 +2440,6 @@ export class PullRequests extends HeyApiClient {
   public create<ThrowOnError extends boolean = false>(
     parameters?: {
       query_directory?: string
-      installationId?: number
       body_directory?: string
       title?: string
       body?: string
@@ -2461,7 +2458,6 @@ export class PullRequests extends HeyApiClient {
               key: "query_directory",
               map: "directory",
             },
-            { in: "body", key: "installationId" },
             {
               in: "body",
               key: "body_directory",
@@ -2534,12 +2530,11 @@ export class Github2 extends HeyApiClient {
   /**
    * Push changes
    *
-   * Commit and push changes to GitHub using GitHub App.
+   * Commit and push changes to GitHub. Uses GitHub App token if project was created via provider, otherwise falls back to SSH.
    */
   public push<ThrowOnError extends boolean = false>(
     parameters?: {
       query_directory?: string
-      installationId?: number
       body_directory?: string
       message?: string
       branchName?: string
@@ -2556,7 +2551,6 @@ export class Github2 extends HeyApiClient {
               key: "query_directory",
               map: "directory",
             },
-            { in: "body", key: "installationId" },
             {
               in: "body",
               key: "body_directory",

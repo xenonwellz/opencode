@@ -120,7 +120,7 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
 
       for (const provider of providers) {
         try {
-          const instResponse = await globalSDK.client.project.providers.github.getInstallations({
+          const instResponse = await globalSDK.client.project.providers.github.installations.list({
             providerId: provider.id,
           })
           setStore("installations", provider.id, Array.isArray(instResponse.data) ? instResponse.data : [])
@@ -237,8 +237,9 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
     } else {
       dialog.show(() => (
         <DialogSelectGithubRepo
-          keyID={provider.id}
-          keyName={provider.name}
+          providerId={provider.providerData?.providerId || ""}
+          installationId={provider.providerData?.installationId || 0}
+          providerName={provider.name}
           onSelect={(path) => {
             dialog.close()
             props.onSelect(path)
@@ -725,7 +726,12 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
 
 type RepoListItem = BackItem | Repo
 
-function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelect: (path: string) => void }) {
+function DialogSelectGithubRepo(props: {
+  providerId: string
+  installationId: number
+  providerName: string
+  onSelect: (path: string) => void
+}) {
   const dialog = useDialog()
   const globalSDK = useGlobalSDK()
   const language = useLanguage()
@@ -748,8 +754,9 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
     setStore("query", query)
 
     try {
-      const response = await globalSDK.client.github.repos.list({
-        keyID: props.keyID,
+      const response = await globalSDK.client.project.providers.github.repos.list({
+        providerId: props.providerId,
+        installationId: props.installationId,
         query: query || undefined,
         page: 1,
         perPage: 30,
@@ -774,18 +781,32 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
   function handleSelectRepo(repo: Repo) {
     dialog.show(() => (
       <DialogSelectGithubBranch
-        keyID={props.keyID}
-        keyName={props.keyName}
+        providerId={props.providerId}
+        installationId={props.installationId}
+        providerName={props.providerName}
         owner={repo.full_name.split("/")[0]}
         repo={repo.name}
         defaultBranch={repo.default_branch}
         onSelect={async (branch) => {
-          dialog.show(() => <DialogCloning repo={repo} branch={branch} keyID={props.keyID} onSelect={props.onSelect} />)
+          dialog.show(() => (
+            <DialogCloning
+              repo={repo}
+              branch={branch}
+              providerId={props.providerId}
+              installationId={props.installationId}
+              onSelect={props.onSelect}
+            />
+          ))
           await handleClone(repo, branch)
         }}
         onBack={() => {
           dialog.show(() => (
-            <DialogSelectGithubRepo keyID={props.keyID} keyName={props.keyName} onSelect={props.onSelect} />
+            <DialogSelectGithubRepo
+              providerId={props.providerId}
+              installationId={props.installationId}
+              providerName={props.providerName}
+              onSelect={props.onSelect}
+            />
           ))
         }}
       />
@@ -796,9 +817,9 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
     const owner = repo.full_name.split("/")[0]
 
     try {
-      // @ts-ignore - SDK will be regenerated
-      const response = await globalSDK.client.github.clone({
-        keyID: props.keyID,
+      const response = await globalSDK.client.project.providers.github.clone({
+        providerId: props.providerId,
+        installationId: props.installationId,
         owner,
         repo: repo.name,
         branch,
@@ -807,20 +828,18 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
       if (response.data?.path) {
         const projectPath = response.data.path
 
-        // Get the actual branch info from the project after clone
         const status = await globalSDK.client.github.status({ directory: projectPath })
         const currentBranch = status.data?.branch || "main"
 
-        // If it's an opencode/ branch, determine the base branch
         const workingBranch = currentBranch
         const baseBranch = workingBranch.startsWith("opencode/")
           ? workingBranch.slice("opencode/".length).replace(/-[a-z0-9]{4}-[a-z0-9]{4}$/, "")
           : (branch ?? repo.default_branch)
 
-        // Register this project in GitHub projects storage
         githubProjects.register({
           projectId: projectPath,
-          keyId: props.keyID,
+          providerId: props.providerId,
+          installationId: props.installationId,
           owner,
           repo: repo.name,
           baseBranch,
@@ -853,7 +872,7 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
   return (
     <Dialog
       title={language.t("dialog.project.select_repo.title")}
-      description={language.t("dialog.project.select_repo.description", { name: props.keyName })}
+      description={language.t("dialog.project.select_repo.description", { name: props.providerName })}
     >
       <List
         search={{ placeholder: language.t("dialog.project.select_repo.search.placeholder"), autofocus: true }}
@@ -947,7 +966,13 @@ function DialogSelectGithubRepo(props: { keyID: string; keyName: string; onSelec
 // DialogCloning
 // ============================================================================
 
-function DialogCloning(props: { repo: Repo; branch?: string; keyID: string; onSelect: (path: string) => void }) {
+function DialogCloning(props: {
+  repo: Repo
+  branch?: string
+  providerId: string
+  installationId: number
+  onSelect: (path: string) => void
+}) {
   const language = useLanguage()
   return (
     <Dialog title={language.t("dialog.project.clone.title")} class="min-h-0" action={<div />}>
@@ -974,8 +999,9 @@ function DialogCloning(props: { repo: Repo; branch?: string; keyID: string; onSe
 type BranchListItem = BackItem | DefaultBranchItem | Branch
 
 function DialogSelectGithubBranch(props: {
-  keyID: string
-  keyName: string
+  providerId: string
+  installationId: number
+  providerName: string
   owner: string
   repo: string
   defaultBranch: string
@@ -1002,13 +1028,11 @@ function DialogSelectGithubBranch(props: {
     }
 
     try {
-      // @ts-ignore - SDK will be regenerated
-      const response = await globalSDK.client.github.repos.branches({
-        keyID: props.keyID,
+      const response = await globalSDK.client.project.providers.github.repos.branches({
+        providerId: props.providerId,
         owner: props.owner,
         repo: props.repo,
-        query: query || undefined,
-        perPage: 50,
+        installationId: props.installationId,
       })
 
       const branches = (response.data ?? []) as Branch[]
@@ -1032,7 +1056,14 @@ function DialogSelectGithubBranch(props: {
   }
 
   function handleGoBack() {
-    dialog.show(() => <DialogSelectGithubRepo keyID={props.keyID} keyName={props.keyName} onSelect={props.onSelect} />)
+    dialog.show(() => (
+      <DialogSelectGithubRepo
+        providerId={props.providerId}
+        installationId={props.installationId}
+        providerName={props.providerName}
+        onSelect={props.onSelect}
+      />
+    ))
   }
 
   return (
@@ -1121,50 +1152,29 @@ function DialogSelectGithubBranch(props: {
 }
 
 // ============================================================================
-// DialogGithubAppSetup
+// DialogGithubAppSetup - Now uses new /project/providers API
 // ============================================================================
 
 function DialogGithubAppSetup(props: { onComplete?: () => void; onBack?: () => void }) {
   const globalSDK = useGlobalSDK()
   const language = useLanguage()
-  const dialog = useDialog()
 
   const [loading, setLoading] = createSignal(false)
   const [organization, setOrganization] = createSignal("")
 
-  function handleSetup() {
+  async function handleSetup() {
     setLoading(true)
-    const suffix = Math.random().toString(36).slice(2, 6).toUpperCase()
-    const manifest = {
-      name: `opencode-host-${suffix}`,
-      description: "OpenCode AI coding assistant",
-      url: window.location.origin,
-      redirect_url: `${globalSDK.url}/github/app/callback`,
-      callback_urls: [`${globalSDK.url}/github/app/callback`],
-      public: false,
-      default_permissions: {
-        contents: "write",
-        pull_requests: "write",
-        issues: "write",
-        metadata: "read",
-      },
-      default_events: [],
+    try {
+      const response = await globalSDK.client.project.providers.github.create({
+        organization: organization() || undefined,
+      })
+      if (response.data?.url) {
+        window.location.href = response.data.url
+      }
+    } catch (e) {
+      console.error("Failed to create provider", e)
+      setLoading(false)
     }
-
-    const form = document.createElement("form")
-    form.method = "POST"
-    form.action = organization()
-      ? `https://github.com/organizations/${organization()}/settings/apps/new`
-      : "https://github.com/settings/apps/new"
-
-    const manifestInput = document.createElement("input")
-    manifestInput.type = "hidden"
-    manifestInput.name = "manifest"
-    manifestInput.value = JSON.stringify(manifest)
-    form.appendChild(manifestInput)
-
-    document.body.appendChild(form)
-    form.submit()
   }
 
   return (
@@ -1173,21 +1183,15 @@ function DialogGithubAppSetup(props: { onComplete?: () => void; onBack?: () => v
       description={language.t("dialog.project.github_app.setup.description")}
     >
       <div class="flex flex-col gap-6 p-6 pt-0">
-        <div class="flex flex-col gap-4">
-          <div class="flex flex-col gap-2">
-            <label class="text-14-medium text-text-strong">Organization (optional)</label>
-            <input
-              type="text"
-              value={organization()}
-              onInput={(e) => setOrganization(e.currentTarget.value)}
-              placeholder="Leave empty for personal app"
-              class="w-full px-3 py-2 bg-surface-base border border-border-base rounded-md text-14-regular text-text-strong placeholder:text-text-weak focus:outline-none focus:border-border-primary"
-            />
-            <span class="text-12-regular text-text-weak">
-              Enter your organization name to create the app under an organization
-            </span>
-          </div>
-        </div>
+        <TextField
+          label={language.t("dialog.project.github_app.setup.organization.label")}
+          placeholder={language.t("dialog.project.github_app.setup.organization.placeholder")}
+          value={organization()}
+          onChange={setOrganization}
+        />
+        <span class="text-12-regular text-text-weak">
+          {language.t("dialog.project.github_app.setup.organization.description")}
+        </span>
 
         <div class="flex justify-end gap-2">
           <Button type="button" variant="secondary" size="large" onClick={props.onBack}>
