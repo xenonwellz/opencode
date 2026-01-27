@@ -19,13 +19,18 @@ import { useGitHubProjects } from "@/context/github-projects"
 // Types
 // ============================================================================
 
-type ProviderType = "local" | "github" | "add_github" | "github_app_setup" | "github_app_install"
+type ProviderType = "local" | "github" | "add_github" | "github_app_setup"
 
 interface ProviderItem {
   type: ProviderType
   id: string
   name: string
   description?: string
+  providerData?: {
+    providerId: string
+    installationId?: number
+    slug?: string
+  }
 }
 
 interface BackItem {
@@ -82,36 +87,50 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
 
   const [store, setStore] = createStore({
     loading: false,
-    creatingApp: false,
-    githubAppConfig: null as { appId: number; slug: string; clientId: string } | null,
-    githubAppInstallations: [] as any[],
+    providers: [] as Array<{
+      id: string
+      type: string
+      appId: number
+      slug: string
+      clientId: string
+    }>,
+    installations: {} as Record<
+      string,
+      Array<{
+        id: number
+        account?: {
+          login: string
+          avatar_url?: string
+          name?: string
+        }
+      }>
+    >,
   })
 
   onMount(() => {
-    loadGithubData()
+    loadProviders()
   })
 
-  async function loadGithubData() {
+  async function loadProviders() {
     setStore("loading", true)
     try {
-      const appConfigResponse = await globalSDK.client.github.app.config.get()
+      const response = await globalSDK.client.project.providers.github.list()
+      const providers = Array.isArray(response.data) ? response.data : []
+      setStore("providers", providers)
 
-      if (appConfigResponse.data) {
-        setStore("githubAppConfig", appConfigResponse.data)
+      for (const provider of providers) {
         try {
-          const installationsResponse = await globalSDK.client.github.app.installations.list()
-          const installations = Array.isArray(installationsResponse.data) ? installationsResponse.data : []
-          setStore("githubAppInstallations", [...installations])
+          const instResponse = await globalSDK.client.project.providers.github.getInstallations({
+            providerId: provider.id,
+          })
+          setStore("installations", provider.id, Array.isArray(instResponse.data) ? instResponse.data : [])
         } catch (e) {
-          console.error("Failed to load GitHub App installations", e)
-          setStore("githubAppInstallations", [])
+          console.error("Failed to load installations for provider", provider.id, e)
+          setStore("installations", provider.id, [])
         }
-      } else {
-        setStore("githubAppConfig", null)
-        setStore("githubAppInstallations", [])
       }
     } catch (e) {
-      console.error("Failed to load GitHub data", e)
+      console.error("Failed to load providers", e)
     } finally {
       setStore("loading", false)
     }
@@ -125,33 +144,52 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
         name: language.t("dialog.project.provider.local.name"),
         description: language.t("dialog.project.provider.local.description"),
       },
-      ...store.githubAppInstallations.map((inst: any) => ({
-        type: "github" as const,
-        id: `inst_${inst.id}`,
-        name: (inst.account?.login || inst.account?.name || `Installation ${inst.id}`) as string,
-        description: inst.account?.login || "GitHub App",
-      })),
     ]
+
+    for (const provider of store.providers) {
+      const installations = store.installations[provider.id] || []
+      if (installations.length > 0) {
+        for (const inst of installations) {
+          result.push({
+            type: "github" as const,
+            id: `${provider.id}_${inst.id}`,
+            name: inst.account?.login || inst.account?.name || `Installation ${inst.id}`,
+            description: `${provider.slug} (${inst.account?.login || "GitHub App"})`,
+            providerData: {
+              providerId: provider.id,
+              installationId: inst.id,
+              slug: provider.slug,
+            },
+          })
+        }
+      }
+    }
+
     return result
   })
 
+  const addGithubItem = createMemo<ProviderItem | null>(() => ({
+    type: "add_github" as const,
+    id: "add_github",
+    name: language.t("dialog.project.provider.add.name"),
+    description: language.t("dialog.project.provider.add.description"),
+  }))
+
   const githubAppItem = createMemo<ProviderItem | null>(() => {
-    if (!store.githubAppConfig) return null
-    const hasInstallations = store.githubAppInstallations.length > 0
+    if (store.providers.length === 0) return null
+    const totalInstallations = store.providers.reduce((acc, p) => acc + (store.installations[p.id]?.length || 0), 0)
     return {
-      type: "github_app_setup",
+      type: "github_app_setup" as const,
       id: "github_app_setup",
-      name: hasInstallations
-        ? language.t("dialog.project.github_app.manage.title")
-        : language.t("dialog.project.provider.github_app_setup.name"),
-      description: hasInstallations
-        ? `${store.githubAppInstallations.length} installation(s)`
-        : language.t("dialog.project.provider.github_app_setup.description"),
+      name: language.t("dialog.project.github_app.manage.title"),
+      description: `${store.providers.length} provider(s), ${totalInstallations} installation(s)`,
     }
   })
 
   const allItems = createMemo<ProviderItem[]>(() => {
     const result = [...items()]
+    const addItem = addGithubItem()
+    if (addItem) result.push(addItem)
     const appItem = githubAppItem()
     if (appItem) result.push(appItem)
     return result
@@ -309,7 +347,7 @@ function DialogSelectProjectProviderType(props: { onBack: () => void }) {
 }
 
 // ============================================================================
-// DialogAddGithubKey
+// DialogAddGithubKey - Now creates GitHub App Provider instead of PAT key
 // ============================================================================
 
 function DialogAddGithubKey(props: { onComplete?: () => void; onBack?: () => void }) {
@@ -317,45 +355,25 @@ function DialogAddGithubKey(props: { onComplete?: () => void; onBack?: () => voi
   const language = useLanguage()
 
   const [store, setStore] = createStore({
-    name: "",
-    token: "",
+    organization: "",
     loading: false,
     error: undefined as string | undefined,
   })
 
-  function isTokenError(error: string): boolean {
-    const lower = error.toLowerCase()
-    return (
-      lower.includes("401") ||
-      lower.includes("unauthorized") ||
-      lower.includes("bad credentials") ||
-      lower.includes("invalid token") ||
-      lower.includes("authentication")
-    )
-  }
-
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault()
-
-    if (!store.name.trim()) {
-      setStore("error", language.t("dialog.project.add_github.error.name_required"))
-      return
-    }
-
-    if (!store.token.trim()) {
-      setStore("error", language.t("dialog.project.add_github.error.token_required"))
-      return
-    }
 
     setStore("loading", true)
     setStore("error", undefined)
 
     try {
-      // @ts-ignore - SDK will be regenerated
-      await globalSDK.client.github.keys.create({
-        name: store.name,
-        token: store.token,
+      const response = await globalSDK.client.project.providers.github.create({
+        organization: store.organization || undefined,
       })
+
+      if (response.data?.url) {
+        window.location.href = response.data.url
+      }
 
       showToast({
         variant: "success",
@@ -366,12 +384,7 @@ function DialogAddGithubKey(props: { onComplete?: () => void; onBack?: () => voi
 
       props.onComplete?.()
     } catch (e) {
-      const errorMsg = String(e)
-      if (isTokenError(errorMsg)) {
-        setStore("error", language.t("dialog.project.add_github.error.invalid_token"))
-      } else {
-        setStore("error", errorMsg)
-      }
+      setStore("error", String(e))
     } finally {
       setStore("loading", false)
     }
@@ -388,34 +401,17 @@ function DialogAddGithubKey(props: { onComplete?: () => void; onBack?: () => voi
     >
       <form onSubmit={handleSubmit} class="flex flex-col gap-6 p-6 pt-0">
         <div class="flex flex-col gap-4">
-          <div class="text-14-regular text-text-weak">
-            <a href="https://github.com/settings/tokens" target="_blank" class="underline">
-              {language.t("dialog.project.add_github.create_token")}
-            </a>
-            . {language.t("dialog.project.add_github.token_instruction")}
-          </div>
+          <div class="text-14-regular text-text-weak">{language.t("dialog.project.add_github.app_instruction")}</div>
         </div>
 
         <TextField
-          label={language.t("dialog.project.add_github.name.label")}
-          placeholder={language.t("dialog.project.add_github.name.placeholder")}
-          value={store.name}
-          onChange={setStore.bind(null, "name")}
-          validationState={store.error && !store.name ? "invalid" : undefined}
-          error={store.error && !store.name ? language.t("dialog.project.add_github.error.name_required") : undefined}
+          label={language.t("dialog.project.add_github.organization.label")}
+          placeholder={language.t("dialog.project.add_github.organization.placeholder")}
+          value={store.organization}
+          onChange={setStore.bind(null, "organization")}
         />
 
-        <TextField
-          label={language.t("dialog.project.add_github.token.label")}
-          type="password"
-          placeholder={language.t("dialog.project.add_github.token.placeholder")}
-          value={store.token}
-          onChange={setStore.bind(null, "token")}
-          validationState={store.error && !store.token ? "invalid" : undefined}
-          error={store.error && !store.token ? language.t("dialog.project.add_github.error.token_required") : undefined}
-        />
-
-        <Show when={store.error && store.name && store.token}>
+        <Show when={store.error}>
           <div class="flex items-start gap-2 p-3 bg-surface-critical-base rounded-md border border-border-critical-base">
             <Icon name="circle-x" class="shrink-0 size-4 text-icon-critical-base mt-0.5" />
             <span class="text-14-regular text-text-critical-base">{store.error}</span>

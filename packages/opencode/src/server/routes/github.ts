@@ -4,7 +4,30 @@ import z from "zod"
 import { Git } from "../../github/git"
 import { lazy } from "../../util/lazy"
 import { errors } from "../error"
-import { GithubApp } from "../../github/app"
+import { get } from "../../project/providers"
+import * as GithubProvider from "../../project/providers/github"
+import path from "path"
+import fs from "fs/promises"
+
+interface WorkspaceConfig {
+  provider?: {
+    id: string
+    type: string
+    installationId: number
+    owner: string
+    repo: string
+  }
+}
+
+async function readWorkspaceConfig(directory: string): Promise<WorkspaceConfig | undefined> {
+  try {
+    const workspacePath = path.join(directory, "workspace.json")
+    const content = await fs.readFile(workspacePath, "utf-8")
+    return JSON.parse(content)
+  } catch {
+    return undefined
+  }
+}
 
 export const GithubRoutes = lazy(() => {
   return new Hono()
@@ -93,7 +116,8 @@ export const GithubRoutes = lazy(() => {
       "/push",
       describeRoute({
         summary: "Push changes",
-        description: "Commit and push changes to GitHub using GitHub App.",
+        description:
+          "Commit and push changes to GitHub. Uses GitHub App token if project was created via provider, otherwise falls back to SSH.",
         operationId: "github.push",
         responses: {
           200: {
@@ -116,19 +140,13 @@ export const GithubRoutes = lazy(() => {
       validator(
         "json",
         z.object({
-          installationId: z.number(),
           directory: z.string(),
           message: z.string().optional(),
           branchName: z.string().optional(),
         }),
       ),
       async (c) => {
-        const { installationId, directory, message, branchName } = c.req.valid("json")
-
-        const app = await GithubApp.get()
-        if (!app) {
-          return c.json({ error: "GitHub App not configured" }, { status: 400 })
-        }
+        const { directory, message, branchName } = c.req.valid("json")
 
         try {
           const changesCount = await Git.getChangesCount(directory)
@@ -143,12 +161,26 @@ export const GithubRoutes = lazy(() => {
             return c.json({ error: "Could not determine branch" }, { status: 400 })
           }
 
-          const octokit = GithubApp.createOctokit(app, installationId)
-          const { data: installationToken } = await octokit.rest.apps.createInstallationAccessToken({
-            installation_id: installationId,
-          })
+          // Check if project was created with GitHub App provider
+          const workspace = await readWorkspaceConfig(directory)
+          const providerId = workspace?.provider?.id
+          const installationId = workspace?.provider?.installationId
+          const isGitHubProvider = workspace?.provider?.type === "github"
 
-          const result = await Git.pushWithToken(directory, installationToken.token, targetBranch)
+          if (isGitHubProvider && providerId && installationId) {
+            const provider = await get(providerId)
+            if (provider) {
+              const octokit = GithubProvider.createOctokit(provider, installationId)
+              const { data: installationToken } = await octokit.rest.apps.createInstallationAccessToken({
+                installation_id: installationId,
+              })
+              const result = await Git.pushWithToken(directory, installationToken.token, targetBranch)
+              return c.json(result)
+            }
+          }
+
+          // Fall back to SSH
+          const result = await Git.push(directory, targetBranch)
           return c.json(result)
         } catch (error) {
           console.error("Push failed", { error })
@@ -183,7 +215,6 @@ export const GithubRoutes = lazy(() => {
       validator(
         "json",
         z.object({
-          installationId: z.number(),
           directory: z.string(),
           title: z.string(),
           body: z.string().optional(),
@@ -192,14 +223,7 @@ export const GithubRoutes = lazy(() => {
         }),
       ),
       async (c) => {
-        const { installationId, directory, title, body, baseBranch, headBranch } = c.req.valid("json")
-
-        const app = await GithubApp.get()
-        if (!app) {
-          return c.json({ error: "GitHub App not configured" }, { status: 400 })
-        }
-
-        const octokit = GithubApp.createOctokit(app, installationId)
+        const { directory, title, body, baseBranch, headBranch } = c.req.valid("json")
 
         try {
           const remoteInfo = await Git.getRemoteInfo(directory)
@@ -212,6 +236,22 @@ export const GithubRoutes = lazy(() => {
             return c.json({ error: "Could not determine head branch" }, { status: 400 })
           }
 
+          // Check if project was created with GitHub App provider
+          const workspace = await readWorkspaceConfig(directory)
+          const providerId = workspace?.provider?.id
+          const installationId = workspace?.provider?.installationId
+          const isGitHubProvider = workspace?.provider?.type === "github"
+
+          if (!isGitHubProvider || !providerId || !installationId) {
+            return c.json({ error: "Project not created with GitHub App provider" }, { status: 400 })
+          }
+
+          const provider = await get(providerId)
+          if (!provider) {
+            return c.json({ error: "Provider not found" }, { status: 404 })
+          }
+
+          const octokit = GithubProvider.createOctokit(provider, installationId)
           const response = await octokit.rest.pulls.create({
             owner: remoteInfo.owner,
             repo: remoteInfo.repo,
@@ -262,20 +302,12 @@ export const GithubRoutes = lazy(() => {
       validator(
         "query",
         z.object({
-          installationId: z.coerce.number(),
           directory: z.string(),
           headBranch: z.string().optional(),
         }),
       ),
       async (c) => {
-        const { installationId, directory, headBranch } = c.req.valid("query")
-
-        const app = await GithubApp.get()
-        if (!app) {
-          return c.json({ error: "GitHub App not configured" }, { status: 400 })
-        }
-
-        const octokit = GithubApp.createOctokit(app, installationId)
+        const { directory, headBranch } = c.req.valid("query")
 
         try {
           const remoteInfo = await Git.getRemoteInfo(directory)
@@ -288,6 +320,22 @@ export const GithubRoutes = lazy(() => {
             return c.json({ error: "Could not determine head branch" }, { status: 400 })
           }
 
+          // Check if project was created with GitHub App provider
+          const workspace = await readWorkspaceConfig(directory)
+          const providerId = workspace?.provider?.id
+          const installationId = workspace?.provider?.installationId
+          const isGitHubProvider = workspace?.provider?.type === "github"
+
+          if (!isGitHubProvider || !providerId || !installationId) {
+            return c.json({ error: "Project not created with GitHub App provider" }, { status: 400 })
+          }
+
+          const provider = await get(providerId)
+          if (!provider) {
+            return c.json({ error: "Provider not found" }, { status: 404 })
+          }
+
+          const octokit = GithubProvider.createOctokit(provider, installationId)
           const response = await octokit.rest.pulls.list({
             owner: remoteInfo.owner,
             repo: remoteInfo.repo,
