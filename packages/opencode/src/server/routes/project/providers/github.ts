@@ -7,7 +7,7 @@ import { errors } from "../../../error"
 import { Global } from "../../../../global"
 import path from "path"
 import fs from "fs/promises"
-import { get, list, add, remove } from "../../../../project/providers"
+import { get, list, add, remove, update } from "../../../../project/providers"
 import * as GithubProvider from "../../../../project/providers/github"
 import { Git } from "../../../../github/git"
 
@@ -95,9 +95,29 @@ export const GithubProviderRoutes = lazy(() => {
           privateKey: "",
         })
 
-        const url = await GithubProvider.getCreationUrl(redirectUrl, provider.id, organization)
+        const manifest = GithubProvider.buildManifest(redirectUrl, provider.id)
+        const manifestStr = JSON.stringify(manifest)
+        const encodedManifest = encodeURIComponent(manifestStr)
 
-        return c.json({ url, providerId: provider.id })
+        const baseUrl = organization
+          ? `https://github.com/organizations/${organization}/settings/apps/new`
+          : `https://github.com/settings/apps/new`
+
+        c.header("Content-Type", "text/html")
+        return c.html(`
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create GitHub App</title>
+</head>
+<body>
+  <form id="form" action="${baseUrl}" method="post">
+    <input type="hidden" name="manifest" value="${encodedManifest}">
+  </form>
+  <script>document.getElementById('form').submit()</script>
+</body>
+</html>
+        `)
       },
     )
     .get(
@@ -119,9 +139,7 @@ export const GithubProviderRoutes = lazy(() => {
 
           const config = await GithubProvider.exchangeManifestCode(code)
 
-          await remove(state)
-          await add({
-            type: "github",
+          await update(state, {
             appId: config.appId,
             slug: config.slug,
             clientId: config.clientId,

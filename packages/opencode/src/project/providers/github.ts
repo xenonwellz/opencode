@@ -46,14 +46,14 @@ export function createOctokit(provider: Provider, installationId?: number): Octo
   })
 }
 
-export async function getCreationUrl(redirectUrl: string, providerId: string, organization?: string): Promise<string> {
+export function buildManifest(redirectUrl: string, providerId: string) {
   const suffix = Math.random().toString(36).slice(2, 6).toUpperCase()
-  const manifest = {
+  return {
     name: `OPENCODE-HOST-${suffix}`,
     description: `OpenCode AI coding assistant`,
     url: redirectUrl,
-    redirect_url: `${redirectUrl}?state=${providerId}`,
-    callback_urls: [`${redirectUrl}?state=${providerId}`],
+    redirect_url: redirectUrl,
+    callback_urls: [redirectUrl],
     public: false,
     default_permissions: {
       contents: "write",
@@ -63,14 +63,20 @@ export async function getCreationUrl(redirectUrl: string, providerId: string, or
     },
     default_events: [],
   }
+}
 
+export async function getCreationUrl(redirectUrl: string, providerId: string, organization?: string): Promise<string> {
+  const manifest = buildManifest(redirectUrl, providerId)
   const encodedManifest = encodeURIComponent(JSON.stringify(manifest))
 
+  // State is passed as a query parameter, GitHub preserves it in the callback
+  const stateParam = `?state=${providerId}`
+
   if (organization) {
-    return `https://github.com/organizations/${organization}/settings/apps/new?manifest=${encodedManifest}`
+    return `https://github.com/organizations/${organization}/settings/apps/new${stateParam}&manifest=${encodedManifest}`
   }
 
-  return `https://github.com/settings/apps/new?manifest=${encodedManifest}`
+  return `https://github.com/settings/apps/new${stateParam}&manifest=${encodedManifest}`
 }
 
 export async function exchangeManifestCode(code: string): Promise<Omit<Provider, "id" | "createdAt">> {
