@@ -2329,16 +2329,51 @@ export type ProjectProvidersGithubCreateError =
 
 export type ProjectProvidersGithubCreateResponses = {
   /**
-   * Provider creation URL
+   * Provider creation manifest
    */
   200: {
-    url: string
+    manifest: unknown
     providerId: string
+    organization?: string
   }
 }
 
 export type ProjectProvidersGithubCreateResponse =
   ProjectProvidersGithubCreateResponses[keyof ProjectProvidersGithubCreateResponses]
+
+export type ProjectProvidersGithubManifestData = {
+  body?: never
+  path: {
+    providerId: string
+  }
+  query?: {
+    directory?: string
+  }
+  url: "/project/providers/{providerId}/manifest"
+}
+
+export type ProjectProvidersGithubManifestErrors = {
+  /**
+   * Not found
+   */
+  404: NotFoundError
+}
+
+export type ProjectProvidersGithubManifestError =
+  ProjectProvidersGithubManifestErrors[keyof ProjectProvidersGithubManifestErrors]
+
+export type ProjectProvidersGithubManifestResponses = {
+  /**
+   * Provider creation manifest
+   */
+  200: {
+    manifest: unknown
+    providerId: string
+  }
+}
+
+export type ProjectProvidersGithubManifestResponse =
+  ProjectProvidersGithubManifestResponses[keyof ProjectProvidersGithubManifestResponses]
 
 export type ProjectProvidersGithubCallbackData = {
   body?: never

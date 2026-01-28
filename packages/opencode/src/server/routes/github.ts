@@ -6,28 +6,7 @@ import { lazy } from "../../util/lazy"
 import { errors } from "../error"
 import { get } from "../../project/providers"
 import * as GithubProvider from "../../project/providers/github"
-import path from "path"
-import fs from "fs/promises"
-
-interface WorkspaceConfig {
-  provider?: {
-    id: string
-    type: string
-    installationId: number
-    owner: string
-    repo: string
-  }
-}
-
-async function readWorkspaceConfig(directory: string): Promise<WorkspaceConfig | undefined> {
-  try {
-    const workspacePath = path.join(directory, "workspace.json")
-    const content = await fs.readFile(workspacePath, "utf-8")
-    return JSON.parse(content)
-  } catch {
-    return undefined
-  }
-}
+import { getWorkspace } from "../../project/workspace"
 
 export const GithubRoutes = lazy(() => {
   return new Hono()
@@ -162,7 +141,7 @@ export const GithubRoutes = lazy(() => {
           }
 
           // Check if project was created with GitHub App provider
-          const workspace = await readWorkspaceConfig(directory)
+          const workspace = await getWorkspace(directory)
           const providerId = workspace?.provider?.id
           const installationId = workspace?.provider?.installationId
           const isGitHubProvider = workspace?.provider?.type === "github"
@@ -237,7 +216,7 @@ export const GithubRoutes = lazy(() => {
           }
 
           // Check if project was created with GitHub App provider
-          const workspace = await readWorkspaceConfig(directory)
+          const workspace = await getWorkspace(directory)
           const providerId = workspace?.provider?.id
           const installationId = workspace?.provider?.installationId
           const isGitHubProvider = workspace?.provider?.type === "github"
@@ -321,7 +300,7 @@ export const GithubRoutes = lazy(() => {
           }
 
           // Check if project was created with GitHub App provider
-          const workspace = await readWorkspaceConfig(directory)
+          const workspace = await getWorkspace(directory)
           const providerId = workspace?.provider?.id
           const installationId = workspace?.provider?.installationId
           const isGitHubProvider = workspace?.provider?.type === "github"

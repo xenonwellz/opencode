@@ -10,6 +10,7 @@ import fs from "fs/promises"
 import { get, list, add, remove, update } from "../../../../project/providers"
 import * as GithubProvider from "../../../../project/providers/github"
 import { Git } from "../../../../github/git"
+import { setWorkspace } from "../../../../project/workspace"
 
 export const GithubProviderRoutes = lazy(() => {
   const log = Log.create({ service: "github-provider" })
@@ -44,46 +45,6 @@ export const GithubProviderRoutes = lazy(() => {
         },
       }),
       async (c) => {
-        const isForm = c.req.query("form")
-        const organization = c.req.query("organization")
-
-        if (isForm) {
-          const redirectUrl = `${c.req.url.replace(c.req.path, "")}/callback`
-
-          const provider = await add({
-            type: "github",
-            appId: 0,
-            slug: "pending",
-            clientId: "",
-            clientSecret: "",
-            privateKey: "",
-          })
-
-          const manifest = GithubProvider.buildManifest(redirectUrl, provider.id)
-          const manifestStr = JSON.stringify(manifest)
-          const encodedManifest = encodeURIComponent(manifestStr)
-
-          const baseUrl = organization
-            ? `https://github.com/organizations/${organization}/settings/apps/new`
-            : `https://github.com/settings/apps/new`
-
-          c.header("Content-Type", "text/html")
-          return c.html(`
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Create GitHub App</title>
-</head>
-<body>
-  <form id="form" action="${baseUrl}" method="post">
-    <input type="hidden" name="manifest" value="${encodedManifest}">
-  </form>
-  <script>document.getElementById('form').submit()</script>
-</body>
-</html>
-          `)
-        }
-
         const providers = await list()
         const githubProviders = providers.filter((p) => p.type === "github")
         return c.json(
@@ -106,10 +67,16 @@ export const GithubProviderRoutes = lazy(() => {
         operationId: "project.providers.github.create",
         responses: {
           200: {
-            description: "Provider creation URL",
+            description: "Provider creation manifest",
             content: {
               "application/json": {
-                schema: resolver(z.object({ url: z.string(), providerId: z.string() })),
+                schema: resolver(
+                  z.object({
+                    manifest: z.any(),
+                    providerId: z.string(),
+                    organization: z.string().optional(),
+                  }),
+                ),
               },
             },
           },
@@ -124,7 +91,7 @@ export const GithubProviderRoutes = lazy(() => {
       ),
       async (c) => {
         const { organization } = c.req.valid("json")
-        const redirectUrl = `${c.req.url.replace(c.req.path, "")}/callback`
+        const redirectUrl = `${c.req.url.replace(c.req.path, "")}/project/providers/callback`
 
         const provider = await add({
           type: "github",
@@ -135,9 +102,46 @@ export const GithubProviderRoutes = lazy(() => {
           privateKey: "",
         })
 
-        const url = await GithubProvider.getCreationUrl(redirectUrl, provider.id, organization)
+        const manifest = GithubProvider.buildManifest(redirectUrl, provider.id)
 
-        return c.json({ url, providerId: provider.id })
+        return c.json({ manifest, providerId: provider.id, organization })
+      },
+    )
+    .get(
+      "/:providerId/manifest",
+      describeRoute({
+        summary: "Get GitHub provider manifest",
+        description: "Get the manifest for an existing GitHub provider to resume setup.",
+        operationId: "project.providers.github.manifest",
+        responses: {
+          200: {
+            description: "Provider creation manifest",
+            content: {
+              "application/json": {
+                schema: resolver(
+                  z.object({
+                    manifest: z.any(),
+                    providerId: z.string(),
+                  }),
+                ),
+              },
+            },
+          },
+          ...errors(404),
+        },
+      }),
+      validator("param", z.object({ providerId: z.string() })),
+      async (c) => {
+        const { providerId } = c.req.valid("param")
+        const provider = await get(providerId)
+        if (!provider) {
+          return c.json({ error: "Provider not found" }, { status: 404 })
+        }
+
+        const redirectUrl = `${c.req.url.replace(c.req.path, "")}/project/providers/callback`
+        const manifest = GithubProvider.buildManifest(redirectUrl, provider.id)
+
+        return c.json({ manifest, providerId: provider.id })
       },
     )
     .get(
@@ -157,6 +161,12 @@ export const GithubProviderRoutes = lazy(() => {
             return c.redirect("/?error=provider_not_found")
           }
 
+          // If provider is already configured, just redirect to home
+          if (provider.appId !== 0 && provider.slug !== "pending") {
+            log.info("Provider already configured, redirecting home")
+            return c.redirect("/")
+          }
+
           const config = await GithubProvider.exchangeManifestCode(code)
 
           await update(state, {
@@ -170,6 +180,19 @@ export const GithubProviderRoutes = lazy(() => {
           return c.redirect("/")
         } catch (error) {
           log.error("GitHub provider callback failed", { error })
+
+          // If the manifest code is invalid (e.g., already used), recreate the manifest
+          // but keep the existing provider state
+          const provider = await get(state)
+          if (provider && provider.appId === 0 && provider.slug === "pending") {
+            const redirectUrl = `${c.req.url.replace(c.req.path, "")}/project/providers/callback`
+            const manifest = GithubProvider.buildManifest(redirectUrl, provider.id)
+            const manifestStr = JSON.stringify(manifest)
+            const encodedManifest = Buffer.from(manifestStr).toString("base64")
+            const githubAppUrl = `https://github.com/apps/${manifest.name}/installations/new?state=${provider.id}&manifest=${encodedManifest}`
+            return c.redirect(githubAppUrl)
+          }
+
           return c.redirect("/?error=provider_setup_failed")
         }
       },
@@ -436,7 +459,7 @@ export const GithubProviderRoutes = lazy(() => {
             return c.json({ error: "Failed to clone repository" }, { status: 400 })
           }
 
-          const workspaceJson = {
+          const workspaceConfig = {
             provider: {
               id: providerId,
               type: "github",
@@ -447,8 +470,7 @@ export const GithubProviderRoutes = lazy(() => {
             createdAt: Date.now(),
           }
 
-          const workspaceJsonPath = path.join(targetDir, "workspace.json")
-          await Bun.write(workspaceJsonPath, JSON.stringify(workspaceJson, null, 2))
+          await setWorkspace(targetDir, workspaceConfig)
 
           try {
             const baseBranch = branch || (await Git.getCurrentBranch(targetDir))

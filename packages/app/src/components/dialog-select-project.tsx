@@ -15,6 +15,9 @@ import { useGlobalSync } from "@/context/global-sync"
 import { useLanguage } from "@/context/language"
 import { useGitHubProjects } from "@/context/github-projects"
 
+import { IconButton } from "@opencode-ai/ui/icon-button"
+import { iife } from "@opencode-ai/util/iife"
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -118,17 +121,7 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
       const providers = Array.isArray(response.data) ? response.data : []
       setStore("providers", providers)
 
-      for (const provider of providers) {
-        try {
-          const instResponse = await globalSDK.client.project.providers.github.installations.list({
-            providerId: provider.id,
-          })
-          setStore("installations", provider.id, Array.isArray(instResponse.data) ? instResponse.data : [])
-        } catch (e) {
-          console.error("Failed to load installations for provider", provider.id, e)
-          setStore("installations", provider.id, [])
-        }
-      }
+    // List of installations is now fetched on-demand when a provider is opened.
     } catch (e) {
       console.error("Failed to load providers", e)
     } finally {
@@ -147,33 +140,16 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
     ]
 
     for (const provider of store.providers) {
-      const installations = store.installations[provider.id] || []
-      if (installations.length > 0) {
-        for (const inst of installations) {
-          result.push({
-            type: "github" as const,
-            id: `${provider.id}_${inst.id}`,
-            name: inst.account?.login || inst.account?.name || `Installation ${inst.id}`,
-            description: inst.account?.login || undefined,
-            providerData: {
-              providerId: provider.id,
-              installationId: inst.id,
-              slug: provider.slug,
-            },
-          })
-        }
-      } else {
-        result.push({
-          type: "github_uninstalled" as const,
-          id: `${provider.id}_uninstalled`,
-          name: provider.slug,
-          description: "Click to install",
-          providerData: {
-            providerId: provider.id,
-            slug: provider.slug,
-          },
-        })
-      }
+      result.push({
+        type: "github" as const,
+        id: provider.id,
+        name: provider.slug,
+        description: provider.slug === "pending" ? "Click to setup" : "Click to open",
+        providerData: {
+          providerId: provider.id,
+          slug: provider.slug,
+        },
+      })
     }
 
     return result
@@ -192,6 +168,60 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
     if (addItem) result.push(addItem)
     return result
   })
+
+  async function deleteProvider(providerId: string) {
+    if (!confirm(language.t("dialog.project.provider.delete.confirm"))) return
+
+    try {
+      await globalSDK.client.project.providers.github.delete({ providerId })
+      loadProviders()
+      showToast({
+        variant: "success",
+        icon: "circle-check",
+        title: language.t("dialog.project.provider.delete.success.title"),
+      })
+    } catch (e) {
+      showToast({
+        variant: "error",
+        icon: "circle-x",
+        title: language.t("dialog.project.provider.delete.error.title"),
+        description: String(e),
+      })
+    }
+  }
+
+  async function handlePending(providerId: string) {
+    try {
+      const response = await globalSDK.client.project.providers.github.manifest({ providerId })
+      if (response.error) throw new Error(String(response.error))
+
+      const { manifest, providerId: pid } = response.data!
+      const provider = store.providers.find((p) => p.id === providerId)
+
+      const form = document.createElement("form")
+      form.method = "POST"
+      form.action =
+        (provider?.slug && provider.slug !== "pending"
+          ? `https://github.com/organizations/${provider.slug}/settings/apps/new`
+          : `https://github.com/settings/apps/new`) + `?state=${pid}`
+
+      const input = document.createElement("input")
+      input.type = "hidden"
+      input.name = "manifest"
+      input.value = JSON.stringify(manifest)
+
+      form.appendChild(input)
+      document.body.appendChild(form)
+      form.submit()
+    } catch (e) {
+      showToast({
+        variant: "error",
+        icon: "circle-x",
+        title: "Failed to resume setup",
+        description: String(e),
+      })
+    }
+  }
 
   function handleSelect(provider: ProviderItem) {
     if (provider.type === "local") {
@@ -223,65 +253,61 @@ export function DialogSelectProjectProvider(props: { multiple?: boolean; onSelec
         ),
         undefined,
       )
-    } else if (provider.type === "github_uninstalled") {
-      dialog.show(() => (
-        <DialogInstallGithubApp
-          providerId={provider.providerData?.providerId || ""}
-          slug={provider.providerData?.slug || ""}
-          onBack={() => {
-            dialog.show(() => <DialogSelectProjectProvider onSelect={() => {}} />)
-          }}
-          onInstalled={() => {
-            dialog.close()
-            dialog.show(() => <DialogSelectProjectProvider onSelect={() => {}} />)
-          }}
-        />
-      ))
-    } else {
-      dialog.show(() => (
-        <DialogSelectGithubRepo
-          providerId={provider.providerData?.providerId || ""}
-          installationId={provider.providerData?.installationId || 0}
-          providerName={provider.name}
-          onSelect={(path) => {
-            dialog.close()
-            props.onSelect(path)
-          }}
-        />
-      ))
+    } else if (provider.type === "github") {
+      if (provider.providerData?.slug === "pending") {
+        handlePending(provider.providerData?.providerId || "")
+      } else {
+        dialog.show(() => (
+          <DialogSelectGithubInstallation
+            providerId={provider.providerData?.providerId || ""}
+            providerName={provider.name}
+            onSelect={props.onSelect}
+          />
+        ))
+      }
     }
   }
 
   return (
     <Dialog title={language.t("dialog.project.open.title")} description={language.t("dialog.project.open.description")}>
-      <div class="flex flex-col gap-4 pb-4">
-        <div class="max-h-[400px] overflow-y-auto">
-          <List
-            search={{ placeholder: language.t("dialog.project.search.placeholder"), autofocus: true }}
-            emptyMessage={language.t("dialog.project.empty")}
-            items={allItems}
-            filterKeys={["name", "description"]}
-            key={(x) => x.id}
-            onSelect={(provider) => {
-              if (provider) handleSelect(provider)
-            }}
-          >
-            {(item) => (
-              <div class="w-full flex items-center justify-between rounded-md group">
-                <div class="flex items-center gap-x-3 grow min-w-0">
-                  <Icon name={item.type === "local" ? "folder" : "github"} class="shrink-0 size-4 text-text-weak" />
-                  <div class="flex flex-col items-start text-left min-w-0">
-                    <span class="text-14-regular text-text-strong truncate">{item.name}</span>
-                    <Show when={item.description}>
-                      <span class="text-12-regular text-text-weak truncate">{item.description}</span>
-                    </Show>
-                  </div>
-                </div>
+      <List
+        search={{ placeholder: language.t("dialog.project.search.placeholder"), autofocus: true }}
+        emptyMessage={language.t("dialog.project.empty")}
+        items={allItems}
+        filterKeys={["name", "description"]}
+        key={(x) => x.id}
+        onSelect={(provider) => {
+          if (provider) handleSelect(provider)
+        }}
+      >
+        {(item) => (
+          <div class="w-full flex items-center justify-between rounded-md group">
+            <div class="flex items-center gap-x-3 grow min-w-0">
+              <Icon name={item.type === "local" ? "folder" : "github"} class="shrink-0 size-4 text-text-weak" />
+              <div class="flex flex-col items-start text-left min-w-0">
+                <span class="text-14-regular text-text-strong truncate">{item.name}</span>
+                <Show when={item.description}>
+                  <span class="text-12-regular text-text-weak truncate">{item.description}</span>
+                </Show>
               </div>
-            )}
-          </List>
-        </div>
-      </div>
+            </div>
+
+            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Show when={item.type === "github" || item.type === "github_uninstalled"}>
+                <IconButton
+                  icon="trash"
+                  size="normal"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteProvider(item.providerData?.providerId || "")
+                  }}
+                />
+              </Show>
+            </div>
+          </div>
+        )}
+      </List>
     </Dialog>
   )
 }
@@ -308,8 +334,31 @@ function DialogAddGithubKey(props: { onComplete?: () => void; onBack?: () => voi
     setStore("error", undefined)
 
     try {
-      const formUrl = `${globalSDK.url}/project/providers?form&organization=${encodeURIComponent(store.organization)}`
-      window.location.href = formUrl
+      const response = await globalSDK.client.project.providers.github.create({
+        organization: store.organization || undefined,
+      })
+
+      if (response.error) {
+        throw new Error(String(response.error))
+      }
+
+      const { manifest, providerId, organization } = response.data!
+
+      const form = document.createElement("form")
+      form.method = "POST"
+      form.action =
+        (organization
+          ? `https://github.com/organizations/${organization}/settings/apps/new`
+          : `https://github.com/settings/apps/new`) + `?state=${providerId}`
+
+      const input = document.createElement("input")
+      input.type = "hidden"
+      input.name = "manifest"
+      input.value = JSON.stringify(manifest)
+
+      form.appendChild(input)
+      document.body.appendChild(form)
+      form.submit()
     } catch (e) {
       setStore("error", String(e))
       setStore("loading", false)
@@ -356,6 +405,134 @@ function DialogAddGithubKey(props: { onComplete?: () => void; onBack?: () => voi
           </Button>
         </div>
       </form>
+    </Dialog>
+  )
+}
+
+// ============================================================================
+// DialogSelectGithubInstallation - Select which installation to use
+// ============================================================================
+
+function DialogSelectGithubInstallation(props: {
+  providerId: string
+  providerName: string
+  onSelect: (path: string) => void
+}) {
+  const dialog = useDialog()
+  const globalSDK = useGlobalSDK()
+  const language = useLanguage()
+
+  const [store, setStore] = createStore({
+    installations: [] as Array<{
+      id: number
+      account?: { login: string; avatar_url?: string; name?: string }
+    }>,
+    loading: true,
+  })
+
+  onMount(async () => {
+    try {
+      const response = await globalSDK.client.project.providers.github.installations.list({
+        providerId: props.providerId,
+      })
+      const installations = Array.isArray(response.data) ? response.data : []
+      setStore("installations", installations)
+
+      // If exactly one installation, automatically select it
+      if (installations.length === 1) {
+        handleSelectInstallation(installations[0])
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setStore("loading", false)
+    }
+  })
+
+  function handleSelectInstallation(inst: { id: number; account?: { login: string } }) {
+    dialog.show(() => (
+      <DialogSelectGithubRepo
+        providerId={props.providerId}
+        installationId={inst.id}
+        providerName={props.providerName}
+        onSelect={props.onSelect}
+      />
+    ))
+  }
+
+  function handleGoBack() {
+    dialog.show(() => <DialogSelectProjectProvider onSelect={props.onSelect} />)
+  }
+
+  const items = createMemo<Array<BackItem | (typeof store.installations[0] & { type: "installation" })>>(() => {
+    const list: Array<BackItem | (typeof store.installations[0] & { type: "installation" })> = [
+      { id: "__back__", name: language.t("common.back"), type: "back" },
+    ]
+    for (const inst of store.installations) {
+      list.push({ ...inst, type: "installation" })
+    }
+    return list
+  })
+
+  return (
+    <Dialog
+      title={props.providerName}
+      description={language.t("dialog.project.github_app.manage.installations")}
+    >
+      <Show when={store.loading}>
+        <div class="flex items-center justify-center p-12">
+          <Spinner class="size-6" />
+        </div>
+      </Show>
+
+      <Show when={!store.loading}>
+        <List
+          items={items}
+          onSelect={(item) => {
+            if (!item) return
+            if (item.id === "__back__") {
+              handleGoBack()
+            } else {
+              handleSelectInstallation(item as any)
+            }
+          }}
+          key={(i) => i.id.toString()}
+        >
+          {(item) => (
+            <div class="w-full flex items-center justify-between rounded-md">
+              <div class="flex items-center gap-x-3 grow min-w-0">
+                <Icon name={item.id === "__back__" ? "arrow-left" : "github"} class="shrink-0 size-4 text-text-weak" />
+                <div class="flex flex-col items-start text-left min-w-0">
+                  <span class="text-14-regular text-text-strong truncate">
+                    {"account" in item
+                      ? item.account?.login || item.account?.name || `Installation ${item.id}`
+                      : (item as BackItem).name}
+                  </span>
+                </div>
+              </div>
+              {item.id !== "__back__" && <Icon name="chevron-right" class="size-4 text-text-weak" />}
+            </div>
+          )}
+        </List>
+
+        <Show when={store.installations.length === 0}>
+          <div class="px-6 pb-6 flex flex-col items-center gap-4 text-center">
+            <div class="text-14-regular text-text-weak">
+              {language.t("dialog.project.github_app.install.instruction", { name: props.providerName })}
+            </div>
+            <Button
+              variant="primary"
+              size="large"
+              onClick={() => window.open(`https://github.com/apps/${props.providerName}/installations/new`, "_blank")}
+            >
+              {language.t("dialog.project.github_app.install.button")}
+            </Button>
+            <Button variant="secondary" size="large" class="w-full" onClick={handleGoBack}>
+              {language.t("common.back")}
+            </Button>
+          </div>
+        </Show>
+      </Show>
     </Dialog>
   )
 }
@@ -1112,66 +1289,6 @@ function DialogSelectGithubBranch(props: {
           <span class="text-14-regular text-text-critical-base">{String(store.error)}</span>
         </div>
       </Show>
-    </Dialog>
-  )
-}
-
-// ============================================================================
-// DialogGithubAppSetup - Now uses new /project/providers API
-// ============================================================================
-
-function DialogGithubAppSetup(props: { onComplete?: () => void; onBack?: () => void }) {
-  const globalSDK = useGlobalSDK()
-  const language = useLanguage()
-
-  const [loading, setLoading] = createSignal(false)
-  const [organization, setOrganization] = createSignal("")
-
-  async function handleSetup() {
-    setLoading(true)
-    try {
-      const response = await globalSDK.client.project.providers.github.create({
-        organization: organization() || undefined,
-      })
-      if (response.data?.url) {
-        window.location.href = response.data.url
-      }
-    } catch (e) {
-      console.error("Failed to create provider", e)
-      setLoading(false)
-    }
-  }
-
-  return (
-    <Dialog
-      title={language.t("dialog.project.github_app.setup.title")}
-      description={language.t("dialog.project.github_app.setup.description")}
-    >
-      <div class="flex flex-col gap-6 p-6 pt-0">
-        <TextField
-          label={language.t("dialog.project.github_app.setup.organization.label")}
-          placeholder={language.t("dialog.project.github_app.setup.organization.placeholder")}
-          value={organization()}
-          onChange={setOrganization}
-        />
-        <span class="text-12-regular text-text-weak">
-          {language.t("dialog.project.github_app.setup.organization.description")}
-        </span>
-
-        <div class="flex justify-end gap-2">
-          <Button type="button" variant="secondary" size="large" onClick={props.onBack}>
-            {language.t("common.back")}
-          </Button>
-          <Button type="button" variant="primary" size="large" onClick={handleSetup} disabled={loading()}>
-            <Show when={loading()} fallback={language.t("dialog.project.github_app.setup.button")}>
-              <div class="flex items-center gap-2">
-                <Spinner class="size-4" />
-                {language.t("dialog.project.github_app.setup.button.loading")}
-              </div>
-            </Show>
-          </Button>
-        </div>
-      </div>
     </Dialog>
   )
 }

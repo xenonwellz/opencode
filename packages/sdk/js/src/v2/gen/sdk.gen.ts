@@ -86,6 +86,8 @@ import type {
   ProjectProvidersGithubInstallationsListErrors,
   ProjectProvidersGithubInstallationsListResponses,
   ProjectProvidersGithubListResponses,
+  ProjectProvidersGithubManifestErrors,
+  ProjectProvidersGithubManifestResponses,
   ProjectProvidersGithubReposBranchesErrors,
   ProjectProvidersGithubReposBranchesResponses,
   ProjectProvidersGithubReposListErrors,
@@ -398,9 +400,9 @@ export class Repos extends HeyApiClient {
 
 export class Github extends HeyApiClient {
   /**
-   * List GitHub providers
+   * List GitHub providers or create form
    *
-   * List all configured GitHub providers.
+   * List providers or return auto-submitting form when ?form is set.
    */
   public list<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -452,6 +454,40 @@ export class Github extends HeyApiClient {
         ...options?.headers,
         ...params.headers,
       },
+    })
+  }
+
+  /**
+   * Get GitHub provider manifest
+   *
+   * Get the manifest for an existing GitHub provider to resume setup.
+   */
+  public manifest<ThrowOnError extends boolean = false>(
+    parameters: {
+      providerId: string
+      directory?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "providerId" },
+            { in: "query", key: "directory" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ProjectProvidersGithubManifestResponses,
+      ProjectProvidersGithubManifestErrors,
+      ThrowOnError
+    >({
+      url: "/project/providers/{providerId}/manifest",
+      ...options,
+      ...params,
     })
   }
 

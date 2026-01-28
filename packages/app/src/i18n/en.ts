@@ -279,6 +279,9 @@ export const dict = {
   "dialog.project.provider.github_app_setup.description": "Create a GitHub App for enhanced access",
   "dialog.project.provider.github_app_install.name": "Install GitHub App",
   "dialog.project.provider.github_app_install.description": "Add access to more repositories",
+  "dialog.project.provider.delete.confirm": "Are you sure you want to delete this provider?",
+  "dialog.project.provider.delete.success.title": "Provider deleted successfully",
+  "dialog.project.provider.delete.error.title": "Failed to delete provider",
   "dialog.project.delete.title": "Delete provider",
   "dialog.project.delete.description":
     'Are you sure you want to delete "{{name}}"? This will remove the GitHub access token from your machine.',

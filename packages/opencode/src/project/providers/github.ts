@@ -65,19 +65,6 @@ export function buildManifest(redirectUrl: string, providerId: string) {
   }
 }
 
-export async function getCreationUrl(redirectUrl: string, providerId: string, organization?: string): Promise<string> {
-  const manifest = buildManifest(redirectUrl, providerId)
-  const encodedManifest = encodeURIComponent(JSON.stringify(manifest))
-
-  // State is passed as a query parameter, GitHub preserves it in the callback
-  const stateParam = `?state=${providerId}`
-
-  if (organization) {
-    return `https://github.com/organizations/${organization}/settings/apps/new${stateParam}&manifest=${encodedManifest}`
-  }
-
-  return `https://github.com/settings/apps/new${stateParam}&manifest=${encodedManifest}`
-}
 
 export async function exchangeManifestCode(code: string): Promise<Omit<Provider, "id" | "createdAt">> {
   const response = await fetch(`https://api.github.com/app-manifests/${code}/conversions`, {
@@ -117,10 +104,10 @@ export async function listInstallations(provider: Provider): Promise<Installatio
       id: inst.id,
       account: account
         ? {
-            login: "login" in account ? account.login || "" : "",
-            avatar_url: account.avatar_url ?? undefined,
-            name: "name" in account ? (account.name ?? undefined) : undefined,
-          }
+          login: "login" in account ? account.login || "" : "",
+          avatar_url: account.avatar_url ?? undefined,
+          name: "name" in account ? (account.name ?? undefined) : undefined,
+        }
         : null,
       target_type: inst.target_type ?? undefined,
       suspended_at: inst.suspended_at ?? undefined,
@@ -137,10 +124,10 @@ export async function getInstallation(provider: Provider, installationId: number
       id: response.data.id,
       account: account
         ? {
-            login: "login" in account ? account.login || "" : "",
-            avatar_url: account.avatar_url ?? undefined,
-            name: "name" in account ? (account.name ?? undefined) : undefined,
-          }
+          login: "login" in account ? account.login || "" : "",
+          avatar_url: account.avatar_url ?? undefined,
+          name: "name" in account ? (account.name ?? undefined) : undefined,
+        }
         : null,
       target_type: response.data.target_type ?? undefined,
       suspended_at: response.data.suspended_at ?? undefined,
