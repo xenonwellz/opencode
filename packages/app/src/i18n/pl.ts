@@ -249,7 +249,7 @@ export const dict = {
   "dialog.directory.empty": "Nie znaleziono folderów",
   "dialog.directory.back": "Powrót do dostawców",
   "dialog.directory.error.not_found.title": "Folder nie znaleziony",
-  "dialog.directory.error.not_found.description": "Folder \"{path}\" nie istnieje lub jest niedostępny.",
+  "dialog.directory.error.not_found.description": 'Folder "{path}" nie istnieje lub jest niedostępny.',
   "dialog.directory.error.failed.title": "Nie udało się otworzyć folderu",
   "dialog.directory.error.failed.description": "Wystąpił błąd podczas weryfikacji folderu.",
 
@@ -287,7 +287,8 @@ export const dict = {
   "dialog.project.edit.color": "Kolor",
   "dialog.project.edit.color.select": "Wybierz kolor {{color}}",
   "dialog.project.edit.worktree.startup": "Skrypt uruchamiania przestrzeni roboczej",
-  "dialog.project.edit.worktree.startup.description": "Uruchamia się po utworzeniu nowej przestrzeni roboczej (worktree).",
+  "dialog.project.edit.worktree.startup.description":
+    "Uruchamia się po utworzeniu nowej przestrzeni roboczej (worktree).",
   "dialog.project.edit.worktree.startup.placeholder": "np. bun install",
 
   "dialog.project.provider.local.name": "Lokalny",
@@ -299,14 +300,16 @@ export const dict = {
   "dialog.project.search.placeholder": "Szukaj dostawców",
   "dialog.project.empty": "Brak dostępnych dostawców",
   "dialog.project.add_github.title": "Dodaj klucz GitHub",
-  "dialog.project.add_github.description": "Wprowadź nazwę dla tego klucza i swój osobisty token dostępu GitHub. Token zostanie bezpiecznie zapisany na Twoim komputerze.",
+  "dialog.project.add_github.description":
+    "Wprowadź nazwę dla tego klucza i swój osobisty token dostępu GitHub. Token zostanie bezpiecznie zapisany na Twoim komputerze.",
   "dialog.project.select_repo.title": "Wybierz repozytorium",
   "dialog.project.select_repo.description": "Podłączono z {{name}}",
   "dialog.project.select_repo.search.placeholder": "Szukaj repozytoriów",
   "dialog.project.select_repo.empty": "Nie znaleziono repozytoriów",
   "dialog.project.select_repo.no_description": "Brak opisu",
   "dialog.project.select_repo.loading": "Ładowanie repozytoriów...",
-  "dialog.project.select_repo.error": "Wystąpił błąd podczas ładowania repozytoriów. Może to być spowodowane nieprawidłową konfiguracją lub nieważnymi/wygaśniętymi tokenami. Sprawdź swoją konfigurację i spróbuj ponownie.",
+  "dialog.project.select_repo.error":
+    "Wystąpił błąd podczas ładowania repozytoriów. Może to być spowodowane nieprawidłową konfiguracją lub nieważnymi/wygaśniętymi tokenami. Sprawdź swoją konfigurację i spróbuj ponownie.",
   "dialog.project.select_repo.loading_more": "Załaduj więcej...",
   "dialog.project.clone.title": "Klonowanie repozytorium",
   "dialog.project.clone.cloning": "Klonowanie {{name}}...",
@@ -323,10 +326,6 @@ export const dict = {
   "dialog.project.select_branch.protected": "Chroniona",
   "dialog.project.select_branch.loading": "Ładowanie gałęzi...",
 
-  "dialog.project.edit.worktree.startup": "Skrypt uruchamiania przestrzeni roboczej",
-  "dialog.project.edit.worktree.startup.description":
-    "Uruchamiany po utworzeniu nowej przestrzeni roboczej (drzewa roboczego).",
-  "dialog.project.edit.worktree.startup.placeholder": "np. bun install",
   "context.breakdown.title": "Podział kontekstu",
   "context.breakdown.note": 'Przybliżony podział tokenów wejściowych. "Inne" obejmuje definicje narzędzi i narzut.',
   "context.breakdown.system": "System",

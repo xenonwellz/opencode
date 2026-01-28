@@ -443,7 +443,6 @@ export const dict = {
   "session.messages.loadEarlier": "載入更早的訊息",
   "session.messages.loading": "正在載入訊息...",
 
-  "session.messages.jumpToLatest": "跳到最新",
   "session.context.addToContext": "將 {{selection}} 新增到上下文",
 
   "session.new.worktree.main": "主分支",

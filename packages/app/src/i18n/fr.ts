@@ -249,7 +249,7 @@ export const dict = {
   "dialog.directory.empty": "Aucun dossier trouvé",
   "dialog.directory.back": "Retour aux fournisseurs",
   "dialog.directory.error.not_found.title": "Dossier introuvable",
-  "dialog.directory.error.not_found.description": "Le dossier \"{path}\" n'existe pas ou est inaccessible.",
+  "dialog.directory.error.not_found.description": 'Le dossier "{path}" n\'existe pas ou est inaccessible.',
   "dialog.directory.error.failed.title": "Échec de l'ouverture du dossier",
   "dialog.directory.error.failed.description": "Une erreur s'est produite lors de la vérification du dossier.",
 
@@ -287,7 +287,8 @@ export const dict = {
   "dialog.project.edit.color": "Couleur",
   "dialog.project.edit.color.select": "Sélectionner la couleur {{color}}",
   "dialog.project.edit.worktree.startup": "Script de démarrage de l'espace de travail",
-  "dialog.project.edit.worktree.startup.description": "S'exécute après la création d'un nouvel espace de travail (worktree).",
+  "dialog.project.edit.worktree.startup.description":
+    "S'exécute après la création d'un nouvel espace de travail (worktree).",
   "dialog.project.edit.worktree.startup.placeholder": "ex. bun install",
 
   "dialog.project.provider.local.name": "Local",
@@ -299,14 +300,16 @@ export const dict = {
   "dialog.project.search.placeholder": "Rechercher des fournisseurs",
   "dialog.project.empty": "Aucun fournisseur disponible",
   "dialog.project.add_github.title": "Ajouter une clé GitHub",
-  "dialog.project.add_github.description": "Entrez un nom pour cette clé et votre jeton d'accès personnel GitHub. Le jeton sera stocké en toute sécurité sur votre machine.",
+  "dialog.project.add_github.description":
+    "Entrez un nom pour cette clé et votre jeton d'accès personnel GitHub. Le jeton sera stocké en toute sécurité sur votre machine.",
   "dialog.project.select_repo.title": "Sélectionner un dépôt",
   "dialog.project.select_repo.description": "Connecté avec {{name}}",
   "dialog.project.select_repo.search.placeholder": "Rechercher des dépôts",
   "dialog.project.select_repo.empty": "Aucun dépôt trouvé",
   "dialog.project.select_repo.no_description": "Aucune description",
   "dialog.project.select_repo.loading": "Chargement des dépôts...",
-  "dialog.project.select_repo.error": "Il y a eu une erreur lors du chargement des dépôts. Cela peut être dû à une configuration incorrecte ou à des jetons invalides/expirés. Veuillez vérifier votre configuration et réessayer.",
+  "dialog.project.select_repo.error":
+    "Il y a eu une erreur lors du chargement des dépôts. Cela peut être dû à une configuration incorrecte ou à des jetons invalides/expirés. Veuillez vérifier votre configuration et réessayer.",
   "dialog.project.select_repo.loading_more": "Charger plus...",
   "dialog.project.clone.title": "Clonage du dépôt",
   "dialog.project.clone.cloning": "Clonage de {{name}}...",
@@ -323,10 +326,6 @@ export const dict = {
   "dialog.project.select_branch.protected": "Protégée",
   "dialog.project.select_branch.loading": "Chargement des branches...",
 
-  "dialog.project.edit.worktree.startup": "Script de démarrage de l'espace de travail",
-  "dialog.project.edit.worktree.startup.description":
-    "S'exécute après la création d'un nouvel espace de travail (arbre de travail).",
-  "dialog.project.edit.worktree.startup.placeholder": "p. ex. bun install",
   "context.breakdown.title": "Répartition du contexte",
   "context.breakdown.note":
     "Répartition approximative des jetons d'entrée. \"Autre\" inclut les définitions d'outils et les frais généraux.",

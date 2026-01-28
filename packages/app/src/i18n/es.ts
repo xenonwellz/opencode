@@ -249,7 +249,7 @@ export const dict = {
   "dialog.directory.empty": "No se encontraron carpetas",
   "dialog.directory.back": "Volver a proveedores",
   "dialog.directory.error.not_found.title": "Carpeta no encontrada",
-  "dialog.directory.error.not_found.description": "La carpeta \"{path}\" no existe o es inaccesible.",
+  "dialog.directory.error.not_found.description": 'La carpeta "{path}" no existe o es inaccesible.',
   "dialog.directory.error.failed.title": "Error al abrir carpeta",
   "dialog.directory.error.failed.description": "Ocurrió un error al verificar la carpeta.",
 
@@ -287,7 +287,8 @@ export const dict = {
   "dialog.project.edit.color": "Color",
   "dialog.project.edit.color.select": "Seleccionar color {{color}}",
   "dialog.project.edit.worktree.startup": "Script de inicio del espacio de trabajo",
-  "dialog.project.edit.worktree.startup.description": "Se ejecuta después de crear un nuevo espacio de trabajo (worktree).",
+  "dialog.project.edit.worktree.startup.description":
+    "Se ejecuta después de crear un nuevo espacio de trabajo (worktree).",
   "dialog.project.edit.worktree.startup.placeholder": "ej. bun install",
 
   "dialog.project.provider.local.name": "Local",
@@ -299,14 +300,16 @@ export const dict = {
   "dialog.project.search.placeholder": "Buscar proveedores",
   "dialog.project.empty": "No hay proveedores disponibles",
   "dialog.project.add_github.title": "Agregar clave de GitHub",
-  "dialog.project.add_github.description": "Ingrese un nombre para esta clave y su token de acceso personal de GitHub. El token se almacenará de forma segura en su máquina.",
+  "dialog.project.add_github.description":
+    "Ingrese un nombre para esta clave y su token de acceso personal de GitHub. El token se almacenará de forma segura en su máquina.",
   "dialog.project.select_repo.title": "Seleccionar repositorio",
   "dialog.project.select_repo.description": "Conectado con {{name}}",
   "dialog.project.select_repo.search.placeholder": "Buscar repositorios",
   "dialog.project.select_repo.empty": "No se encontraron repositorios",
   "dialog.project.select_repo.no_description": "Sin descripción",
   "dialog.project.select_repo.loading": "Cargando repositorios...",
-  "dialog.project.select_repo.error": "Hubo un error al cargar los repositorios. Esto puede deberse a una configuración incorrecta o tokens inválidos/expirados. Por favor verifique su configuración e inténtelo de nuevo.",
+  "dialog.project.select_repo.error":
+    "Hubo un error al cargar los repositorios. Esto puede deberse a una configuración incorrecta o tokens inválidos/expirados. Por favor verifique su configuración e inténtelo de nuevo.",
   "dialog.project.select_repo.loading_more": "Cargando más...",
   "dialog.project.clone.title": "Clonando repositorio",
   "dialog.project.clone.cloning": "Clonando {{name}}...",
@@ -323,10 +326,6 @@ export const dict = {
   "dialog.project.select_branch.protected": "Protegida",
   "dialog.project.select_branch.loading": "Cargando ramas...",
 
-  "dialog.project.edit.worktree.startup": "Script de inicio del espacio de trabajo",
-  "dialog.project.edit.worktree.startup.description":
-    "Se ejecuta después de crear un nuevo espacio de trabajo (árbol de trabajo).",
-  "dialog.project.edit.worktree.startup.placeholder": "p. ej. bun install",
   "context.breakdown.title": "Desglose de Contexto",
   "context.breakdown.note":
     'Desglose aproximado de tokens de entrada. "Otro" incluye definiciones de herramientas y sobrecarga.',

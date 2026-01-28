@@ -254,7 +254,7 @@ export const dict = {
   "dialog.directory.empty": "Keine Ordner gefunden",
   "dialog.directory.back": "Zurück zu den Anbietern",
   "dialog.directory.error.not_found.title": "Ordner nicht gefunden",
-  "dialog.directory.error.not_found.description": "Ordner \"{path}\" existiert nicht oder ist nicht zugänglich.",
+  "dialog.directory.error.not_found.description": 'Ordner "{path}" existiert nicht oder ist nicht zugänglich.',
   "dialog.directory.error.failed.title": "Ordner konnte nicht geöffnet werden",
   "dialog.directory.error.failed.description": "Beim Überprüfen des Ordners ist ein Fehler aufgetreten.",
 
@@ -292,7 +292,8 @@ export const dict = {
   "dialog.project.edit.color": "Farbe",
   "dialog.project.edit.color.select": "{{color}}-Farbe auswählen",
   "dialog.project.edit.worktree.startup": "Arbeitsbereich-Startskript",
-  "dialog.project.edit.worktree.startup.description": "Läuft nach dem Erstellen eines neuen Arbeitsbereichs (worktree).",
+  "dialog.project.edit.worktree.startup.description":
+    "Läuft nach dem Erstellen eines neuen Arbeitsbereichs (worktree).",
   "dialog.project.edit.worktree.startup.placeholder": "z.B. bun install",
 
   "dialog.project.provider.local.name": "Lokal",
@@ -304,14 +305,16 @@ export const dict = {
   "dialog.project.search.placeholder": "Anbieter suchen",
   "dialog.project.empty": "Keine Anbieter verfügbar",
   "dialog.project.add_github.title": "GitHub-Schlüssel hinzufügen",
-  "dialog.project.add_github.description": "Geben Sie einen Namen für diesen Schlüssel und Ihren GitHub-Personal-Access-Token ein. Das Token wird sicher auf Ihrem Computer gespeichert.",
+  "dialog.project.add_github.description":
+    "Geben Sie einen Namen für diesen Schlüssel und Ihren GitHub-Personal-Access-Token ein. Das Token wird sicher auf Ihrem Computer gespeichert.",
   "dialog.project.select_repo.title": "Repository auswählen",
   "dialog.project.select_repo.description": "Verbunden mit {{name}}",
   "dialog.project.select_repo.search.placeholder": "Repositorys suchen",
   "dialog.project.select_repo.empty": "Keine Repositorys gefunden",
   "dialog.project.select_repo.no_description": "Keine Beschreibung",
   "dialog.project.select_repo.loading": "Repositorys werden geladen...",
-  "dialog.project.select_repo.error": "Beim Laden der Repositorys ist ein Fehler aufgetreten. Dies kann durch falsche Konfiguration oder ungültige/ablaufende Tokens verursacht werden. Bitte überprüfen Sie Ihre Konfiguration und versuchen Sie es erneut.",
+  "dialog.project.select_repo.error":
+    "Beim Laden der Repositorys ist ein Fehler aufgetreten. Dies kann durch falsche Konfiguration oder ungültige/ablaufende Tokens verursacht werden. Bitte überprüfen Sie Ihre Konfiguration und versuchen Sie es erneut.",
   "dialog.project.select_repo.loading_more": "Mehr laden...",
   "dialog.project.clone.title": "Repository klonen",
   "dialog.project.clone.cloning": "{{name}} wird geklont...",
@@ -328,10 +331,6 @@ export const dict = {
   "dialog.project.select_branch.protected": "Geschützt",
   "dialog.project.select_branch.loading": "Branches werden geladen...",
 
-  "dialog.project.edit.worktree.startup": "Startup-Skript für Arbeitsbereich",
-  "dialog.project.edit.worktree.startup.description":
-    "Wird nach dem Erstellen eines neuen Arbeitsbereichs (Worktree) ausgeführt.",
-  "dialog.project.edit.worktree.startup.placeholder": "z. B. bun install",
   "context.breakdown.title": "Kontext-Aufschlüsselung",
   "context.breakdown.note":
     'Ungefähre Aufschlüsselung der Eingabe-Token. "Andere" beinhaltet Werkzeugdefinitionen und Overhead.',
@@ -470,7 +469,8 @@ export const dict = {
 
   "home.recentProjects": "Letzte Projekte",
   "home.empty.title": "Keine letzten Projekte",
-  "home.empty.description": "Öffnen Sie ein lokales Projekt oder verbinden Sie einen unterstützten Anbieter, um loszulegen",
+  "home.empty.description":
+    "Öffnen Sie ein lokales Projekt oder verbinden Sie einen unterstützten Anbieter, um loszulegen",
 
   "session.tab.session": "Sitzung",
   "session.tab.review": "Überprüfung",
@@ -489,7 +489,6 @@ export const dict = {
   "session.messages.loadEarlier": "Frühere Nachrichten laden",
   "session.messages.loading": "Lade Nachrichten...",
 
-  "session.messages.jumpToLatest": "Zum neuesten springen",
   "session.context.addToContext": "{{selection}} zum Kontext hinzufügen",
 
   "session.new.worktree.main": "Haupt-Branch",

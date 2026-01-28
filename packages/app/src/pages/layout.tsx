@@ -2363,7 +2363,7 @@ export default function Layout(props: ParentProps) {
                     navigateToProject(props.project.worktree)
                   }}
                 >
-                  {language.t("sidebar.project.viewAllSessions")}
+                  {"View all sessions"}
                 </Button>
               </div>
             </div>

@@ -252,7 +252,7 @@ export const dict = {
   "dialog.directory.empty": "Ingen mapper funnet",
   "dialog.directory.back": "Tilbake til leverandører",
   "dialog.directory.error.not_found.title": "Mappe ikke funnet",
-  "dialog.directory.error.not_found.description": "Mappen \"{path}\" eksisterer ikke eller er utilgjengelig.",
+  "dialog.directory.error.not_found.description": 'Mappen "{path}" eksisterer ikke eller er utilgjengelig.',
   "dialog.directory.error.failed.title": "Kunne ikke åpne mappe",
   "dialog.directory.error.failed.description": "Det oppstod en feil under verifisering av mappen.",
 
@@ -302,14 +302,16 @@ export const dict = {
   "dialog.project.search.placeholder": "Søk leverandører",
   "dialog.project.empty": "Ingen leverandører tilgjengelig",
   "dialog.project.add_github.title": "Legg til GitHub-nøkkel",
-  "dialog.project.add_github.description": "Skriv inn et navn for denne nøkkelen og din GitHub personlige tilgangstoken. Tokenet vil bli lagret sikkert på maskinen din.",
+  "dialog.project.add_github.description":
+    "Skriv inn et navn for denne nøkkelen og din GitHub personlige tilgangstoken. Tokenet vil bli lagret sikkert på maskinen din.",
   "dialog.project.select_repo.title": "Velg repository",
   "dialog.project.select_repo.description": "Tilkoblet med {{name}}",
   "dialog.project.select_repo.search.placeholder": "Søk repositories",
   "dialog.project.select_repo.empty": "Ingen repositories funnet",
   "dialog.project.select_repo.no_description": "Ingen beskrivelse",
   "dialog.project.select_repo.loading": "Laster repositories...",
-  "dialog.project.select_repo.error": "Det oppstod en feil ved lasting av repositories. Dette kan skyldes feil konfigurasjon eller ugyldige/utløpte tokens. Vennligst sjekk konfigurasjonen din og prøv igjen.",
+  "dialog.project.select_repo.error":
+    "Det oppstod en feil ved lasting av repositories. Dette kan skyldes feil konfigurasjon eller ugyldige/utløpte tokens. Vennligst sjekk konfigurasjonen din og prøv igjen.",
   "dialog.project.select_repo.loading_more": "Last inn flere...",
   "dialog.project.clone.title": "Kloner repository",
   "dialog.project.clone.cloning": "Kloner {{name}}...",
@@ -326,9 +328,6 @@ export const dict = {
   "dialog.project.select_branch.protected": "Beskyttet",
   "dialog.project.select_branch.loading": "Laster grener...",
 
-  "dialog.project.edit.worktree.startup": "Oppstartsskript for arbeidsområde",
-  "dialog.project.edit.worktree.startup.description": "Kjører etter at et nytt arbeidsområde (worktree) er opprettet.",
-  "dialog.project.edit.worktree.startup.placeholder": "f.eks. bun install",
   "context.breakdown.title": "Kontekstfordeling",
   "context.breakdown.note": 'Omtrentlig fordeling av input-tokens. "Annet" inkluderer verktøydefinisjoner og overhead.',
   "context.breakdown.system": "System",

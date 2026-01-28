@@ -249,7 +249,7 @@ export const dict = {
   "dialog.directory.empty": "Папки не найдены",
   "dialog.directory.back": "Назад к провайдерам",
   "dialog.directory.error.not_found.title": "Папка не найдена",
-  "dialog.directory.error.not_found.description": "Папка \"{path}\" не существует или недоступна.",
+  "dialog.directory.error.not_found.description": 'Папка "{path}" не существует или недоступна.',
   "dialog.directory.error.failed.title": "Не удалось открыть папку",
   "dialog.directory.error.failed.description": "Произошла ошибка при проверке папки.",
 
@@ -287,7 +287,8 @@ export const dict = {
   "dialog.project.edit.color": "Цвет",
   "dialog.project.edit.color.select": "Выбрать цвет {{color}}",
   "dialog.project.edit.worktree.startup": "Скрипт запуска рабочего пространства",
-  "dialog.project.edit.worktree.startup.description": "Выполняется после создания нового рабочего пространства (worktree).",
+  "dialog.project.edit.worktree.startup.description":
+    "Выполняется после создания нового рабочего пространства (worktree).",
   "dialog.project.edit.worktree.startup.placeholder": "напр. bun install",
 
   "dialog.project.provider.local.name": "Локальный",
@@ -299,14 +300,16 @@ export const dict = {
   "dialog.project.search.placeholder": "Поиск провайдеров",
   "dialog.project.empty": "Нет доступных провайдеров",
   "dialog.project.add_github.title": "Добавить ключ GitHub",
-  "dialog.project.add_github.description": "Введите имя для этого ключа и ваш персональный токен доступа GitHub. Токен будет безопасно сохранен на вашем компьютере.",
+  "dialog.project.add_github.description":
+    "Введите имя для этого ключа и ваш персональный токен доступа GitHub. Токен будет безопасно сохранен на вашем компьютере.",
   "dialog.project.select_repo.title": "Выбрать репозиторий",
   "dialog.project.select_repo.description": "Подключено с {{name}}",
   "dialog.project.select_repo.search.placeholder": "Поиск репозиториев",
   "dialog.project.select_repo.empty": "Репозитории не найдены",
   "dialog.project.select_repo.no_description": "Нет описания",
   "dialog.project.select_repo.loading": "Загрузка репозиториев...",
-  "dialog.project.select_repo.error": "Произошла ошибка при загрузке репозиториев. Это может быть вызвано неправильной конфигурацией или недействительными/истекшими токенами. Пожалуйста, проверьте вашу конфигурацию и попробуйте снова.",
+  "dialog.project.select_repo.error":
+    "Произошла ошибка при загрузке репозиториев. Это может быть вызвано неправильной конфигурацией или недействительными/истекшими токенами. Пожалуйста, проверьте вашу конфигурацию и попробуйте снова.",
   "dialog.project.select_repo.loading_more": "Загрузить больше...",
   "dialog.project.clone.title": "Клонирование репозитория",
   "dialog.project.clone.cloning": "Клонирование {{name}}...",
@@ -323,10 +326,6 @@ export const dict = {
   "dialog.project.select_branch.protected": "Защищена",
   "dialog.project.select_branch.loading": "Загрузка веток...",
 
-  "dialog.project.edit.worktree.startup": "Скрипт запуска рабочего пространства",
-  "dialog.project.edit.worktree.startup.description":
-    "Запускается после создания нового рабочего пространства (worktree).",
-  "dialog.project.edit.worktree.startup.placeholder": "например, bun install",
   "context.breakdown.title": "Разбивка контекста",
   "context.breakdown.note":
     'Приблизительная разбивка входных токенов. "Другое" включает определения инструментов и накладные расходы.',
