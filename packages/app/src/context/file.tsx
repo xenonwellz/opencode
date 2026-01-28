@@ -318,7 +318,7 @@ export const { use: useFile, provider: FileProvider } = createSimpleContext({
     const treeInflight = new Map<string, Promise<void>>()
 
     const search = (query: string, dirs: "true" | "false") =>
-      sdk.client.find.files({ query, dirs }).then(
+      sdk.client.find.files({ query, type: dirs === "true" ? "directory" : "file" }).then(
         (x) => (x.data ?? []).map(normalize),
         () => [],
       )

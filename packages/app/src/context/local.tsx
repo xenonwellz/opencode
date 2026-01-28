@@ -225,11 +225,5 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
       agent,
     }
     return result
-    const result = {
-      slug: createMemo(() => base64Encode(sdk.directory)),
-      model,
-      agent,
-    }
-    return result
   },
 })
