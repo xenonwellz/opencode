@@ -4475,6 +4475,74 @@ export type GithubPullRequestsCreateResponses = {
 export type GithubPullRequestsCreateResponse =
   GithubPullRequestsCreateResponses[keyof GithubPullRequestsCreateResponses]
 
+export type GithubDiffData = {
+  body?: never
+  path?: never
+  query: {
+    directory: string
+    base: string
+    head?: string
+  }
+  url: "/github/diff"
+}
+
+export type GithubDiffErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubDiffError = GithubDiffErrors[keyof GithubDiffErrors]
+
+export type GithubDiffResponses = {
+  /**
+   * Git diff
+   */
+  200: string
+}
+
+export type GithubDiffResponse = GithubDiffResponses[keyof GithubDiffResponses]
+
+export type GithubPullRequestsGenerateMessageData = {
+  body?: {
+    directory: string
+    baseBranch: string
+    model: {
+      providerID: string
+      modelID: string
+    }
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/pull-requests/generate-message"
+}
+
+export type GithubPullRequestsGenerateMessageErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubPullRequestsGenerateMessageError =
+  GithubPullRequestsGenerateMessageErrors[keyof GithubPullRequestsGenerateMessageErrors]
+
+export type GithubPullRequestsGenerateMessageResponses = {
+  /**
+   * Generated message
+   */
+  200: {
+    title: string
+    body: string
+  }
+}
+
+export type GithubPullRequestsGenerateMessageResponse =
+  GithubPullRequestsGenerateMessageResponses[keyof GithubPullRequestsGenerateMessageResponses]
+
 export type FindTextData = {
   body?: never
   path?: never

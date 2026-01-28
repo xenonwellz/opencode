@@ -7,6 +7,9 @@ import { errors } from "../error"
 import { get } from "../../project/providers"
 import * as GithubProvider from "../../project/providers/github"
 import { getWorkspace } from "../../project/workspace"
+import { LLM } from "../../session/llm"
+import { Agent } from "../../agent/agent"
+import { Provider } from "../../provider/provider"
 
 export const GithubRoutes = lazy(() => {
   return new Hono()
@@ -335,6 +338,143 @@ export const GithubRoutes = lazy(() => {
           })
         } catch (error) {
           console.error("Get PR failed", { error })
+          return c.json({ error: String(error) }, { status: 400 })
+        }
+      },
+    )
+    .get(
+      "/diff",
+      describeRoute({
+        summary: "Get git diff",
+        description: "Get git diff between current branch and base branch.",
+        operationId: "github.diff",
+        responses: {
+          200: {
+            description: "Git diff",
+            content: {
+              "application/json": {
+                schema: resolver(z.string()),
+              },
+            },
+          },
+          ...errors(400),
+        },
+      }),
+      validator(
+        "query",
+        z.object({
+          directory: z.string(),
+          base: z.string(),
+          head: z.string().optional(),
+        }),
+      ),
+      async (c) => {
+        const { directory, base, head } = c.req.valid("query")
+        try {
+          const diff = await Git.getDiff(directory, base, head)
+          return c.json(diff)
+        } catch (error) {
+          return c.json({ error: String(error) }, { status: 400 })
+        }
+      },
+    )
+    .post(
+      "/pull-requests/generate-message",
+      describeRoute({
+        summary: "Generate PR message",
+        description: "Generate a PR title and body based on git diffs using an AI model.",
+        operationId: "github.pullRequests.generateMessage",
+        responses: {
+          200: {
+            description: "Generated message",
+            content: {
+              "application/json": {
+                schema: resolver(
+                  z.object({
+                    title: z.string(),
+                    body: z.string(),
+                  }),
+                ),
+              },
+            },
+          },
+          ...errors(400),
+        },
+      }),
+      validator(
+        "json",
+        z.object({
+          directory: z.string(),
+          baseBranch: z.string(),
+          model: z.object({
+            providerID: z.string(),
+            modelID: z.string(),
+          }),
+        }),
+      ),
+      async (c) => {
+        const { directory, baseBranch, model: modelKey } = c.req.valid("json")
+
+        try {
+          const diff = await Git.getDiff(directory, baseBranch)
+          if (!diff.trim()) {
+            return c.json({ title: "", body: "No changes detected." })
+          }
+
+          const agent = await Agent.get("title") // Use title agent or generic
+          const model = await Provider.getModel(modelKey.providerID, modelKey.modelID)
+
+          const prompt = `
+            You are a helpful assistant that generates GitHub Pull Request titles and descriptions.
+            Based on the following git diff, generate a concise and descriptive PR title and a detailed body.
+            
+            Return your response in the following format:
+            [TITLE]
+            Your title here
+            [BODY]
+            Your body here
+
+            Git diff:
+            \`\`\`
+            ${diff.slice(0, 10000)}
+            \`\`\`
+          `
+
+          const stream = await LLM.stream({
+            agent: agent || (await Agent.defaultAgent()),
+            user: {
+              id: "0",
+              sessionID: "pr-gen",
+              role: "user",
+              time: { created: Date.now() },
+              agent: "title",
+              model: modelKey,
+            },
+            tools: {},
+            model,
+            small: true,
+            messages: [
+              {
+                role: "user",
+                content: prompt,
+              },
+            ],
+            abort: new AbortController().signal,
+            sessionID: "pr-gen",
+            system: [],
+          })
+
+          const text = await stream.text
+          const [titlePart, bodyPart] = text.split("[BODY]")
+          const title = titlePart.replace("[TITLE]", "").trim()
+          const body = bodyPart ? bodyPart.trim() : ""
+
+          return c.json({
+            title: title || "PR: Automated Changes",
+            body: body || text,
+          })
+        } catch (error) {
+          console.error("Generate PR message failed", { error })
           return c.json({ error: String(error) }, { status: 400 })
         }
       },

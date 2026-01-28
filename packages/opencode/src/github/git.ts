@@ -302,4 +302,26 @@ export namespace Git {
     const count = await getChangesCount(directory)
     return count === 0
   }
+
+  /**
+   * Get diff between two branches or current working directory
+   */
+  export async function getDiff(directory: string, base: string, head?: string): Promise<string> {
+    const args = ["git", "diff", base]
+    if (head) {
+      args.push(head)
+    }
+    const result = await Bun.spawn({
+      cmd: args,
+      cwd: directory,
+      stderr: "pipe",
+      stdout: "pipe",
+    })
+    await result.exited
+    if (result.exitCode !== 0) {
+      const stderr = await new Response(result.stderr).text()
+      throw new Error(`Failed to get diff: ${stderr}`)
+    }
+    return new Response(result.stdout).text()
+  }
 }

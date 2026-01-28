@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal, onMount, Show } from "solid-js"
+import { Component, createMemo, createSignal, onMount, onCleanup, Show } from "solid-js"
 import { Button } from "@opencode-ai/ui/button"
 import { Icon } from "@opencode-ai/ui/icon"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
@@ -8,6 +8,7 @@ import { useSDK } from "@/context/sdk"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { getFilename } from "@opencode-ai/util/path"
 import { useGitHubProjects } from "@/context/github-projects"
+import { useLocal } from "@/context/local"
 
 interface GitActionsProps {
   class?: string
@@ -26,10 +27,10 @@ export const GitActions: Component<GitActionsProps> = (props) => {
   const sdk = useSDK()
   const dialog = useDialog()
   const githubProjects = useGitHubProjects()
+  const local = useLocal()
 
   const [pushing, setPushing] = createSignal(false)
   const [creatingPR, setCreatingPR] = createSignal(false)
-  const [githubKeys, setGithubKeys] = createSignal<GitHubKey[]>([])
   const [gitStatus, setGitStatus] = createSignal<{
     branch?: string
     changesCount: number
@@ -38,41 +39,13 @@ export const GitActions: Component<GitActionsProps> = (props) => {
   const [hasRemote, setHasRemote] = createSignal(false)
 
   // Get GitHub project info for current directory
-  const githubProject = createMemo(() => {
-    const project = githubProjects.get(sdk.directory)
-    return project()
-  })
-
-  // Get the first available GitHub key (prefer from project, fallback to list)
-  const githubKey = createMemo(() => {
-    const project = githubProject()
-    if (project) {
-      // Return a minimal key object from the stored project
-      return { id: project.keyId, name: "", type: "classic" as const, createdAt: 0 }
-    }
-    const keys = githubKeys()
-    return keys[0]
-  })
-
-  const hasGitHubKey = createMemo(() => !!githubKey())
+  const githubProject = githubProjects.get(sdk.directory)
 
   // Check if this is a GitHub project with PR info
   const hasPR = createMemo(() => {
     const project = githubProject()
     return project?.prNumber !== undefined && project?.prUrl !== undefined
   })
-
-  // Fetch GitHub keys
-  const fetchKeys = async () => {
-    try {
-      const result = await sdk.client.github.keys.list({ directory: sdk.directory })
-      if (result.data) {
-        setGithubKeys(result.data as GitHubKey[])
-      }
-    } catch {
-      setGithubKeys([])
-    }
-  }
 
   // Check if this repo has a GitHub remote
   const checkRemote = async () => {
@@ -85,35 +58,30 @@ export const GitActions: Component<GitActionsProps> = (props) => {
   }
 
   // Refresh git status
+  const [refreshingStatus, setRefreshingStatus] = createSignal(false)
   const refreshStatus = async () => {
+    if (refreshingStatus()) return
+    setRefreshingStatus(true)
     try {
       const result = await sdk.client.github.status({ directory: sdk.directory })
       if (result.data) {
-        setGitStatus(result.data)
+        setGitStatus(result.data as any)
       }
     } catch {
       setGitStatus(null)
+    } finally {
+      setRefreshingStatus(false)
     }
   }
 
   // Push changes
   const handlePush = async () => {
-    const key = githubKey()
-    if (!key) {
-      showToast({
-        title: "No GitHub key configured",
-        description: "Add a GitHub personal access token first.",
-      })
-      return
-    }
-
     setPushing(true)
     try {
       const result = await sdk.client.github.push({
-        keyID: key.id,
         body_directory: sdk.directory,
         message: `OpenCode: Changes from ${new Date().toLocaleString()}`,
-      })
+      } as any)
 
       if (result.data) {
         showToast({
@@ -136,13 +104,14 @@ export const GitActions: Component<GitActionsProps> = (props) => {
 
   // Create Draft PR
   const handleCreateDraftPR = async () => {
-    const key = githubKey()
     const project = githubProject()
+    const currentModel = local.model.current()
 
-    if (!key) {
+    if (!currentModel) {
       showToast({
-        title: "No GitHub key configured",
-        description: "Add a GitHub personal access token first.",
+        title: "No AI model selected",
+        description: "An AI model is required to generate the PR title and description.",
+        variant: "error",
       })
       return
     }
@@ -150,15 +119,46 @@ export const GitActions: Component<GitActionsProps> = (props) => {
     setCreatingPR(true)
     try {
       const status = gitStatus()
-      const projectName = getFilename(sdk.directory)
+
+      // Check for differences between branch and base before proceeding
+      if (project && status?.branch) {
+        const diffResult = await sdk.client.github.diff({
+          directory: sdk.directory,
+          base: project.baseBranch,
+          head: status.branch,
+        })
+
+        if (!diffResult.data?.trim()) {
+          throw new Error("No changes detected between current branch and base branch. Nothing to create a Pull Request for.")
+        }
+      }
+
+      let title
+      let body
+
+      // Generate PR message using AI
+      try {
+        const generated = await sdk.client.github.pullRequests.generateMessage({
+          body_directory: sdk.directory,
+          baseBranch: project?.baseBranch ?? "main",
+          model: {
+            providerID: currentModel.provider.id,
+            modelID: currentModel.id,
+          },
+        } as any)
+        if (generated.data?.title) title = generated.data.title
+        if (generated.data?.body) body = generated.data.body
+      } catch (e) {
+        console.error("Failed to generate PR message", e)
+        throw new Error("Failed to generate PR message using AI model.")
+      }
 
       const result = await sdk.client.github.pullRequests.create({
-        keyID: key.id,
         body_directory: sdk.directory,
-        title: `OpenCode: Changes to ${projectName}`,
-        body: `Automated PR created by OpenCode.\n\nBranch: ${status?.branch || "unknown"}`,
+        title,
+        body,
         baseBranch: project?.baseBranch ?? "main",
-      })
+      } as any)
 
       if (result.data) {
         // Update the GitHub project with PR info
@@ -167,7 +167,7 @@ export const GitActions: Component<GitActionsProps> = (props) => {
         }
 
         showToast({
-          title: "Draft PR created",
+          title: "Pull Request created",
           description: `PR #${result.data.number}: ${result.data.title}`,
         })
       } else {
@@ -199,13 +199,14 @@ export const GitActions: Component<GitActionsProps> = (props) => {
 
   // Initial load
   onMount(() => {
-    fetchKeys()
     checkRemote()
     refreshStatus()
+    const interval = setInterval(refreshStatus, 5000)
+    onCleanup(() => clearInterval(interval))
   })
 
   return (
-    <Show when={hasRemote() && hasGitHubKey()}>
+    <Show when={hasRemote()}>
       <div class={`flex items-center gap-1 px-3 py-1.5 border-b border-border-base ${props.class ?? ""}`}>
         {/* Git Status Indicator */}
         <div class="flex items-center gap-2 mr-2">
@@ -232,7 +233,7 @@ export const GitActions: Component<GitActionsProps> = (props) => {
             <Show when={pushing()} fallback={<Icon name="arrow-up" size="small" />}>
               <Spinner class="size-3" />
             </Show>
-            Push
+            Commit and Push
           </Button>
         </Tooltip>
 

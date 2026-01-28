@@ -33,8 +33,12 @@ import type {
   FindSymbolsResponses,
   FindTextResponses,
   FormatterStatusResponses,
+  GithubDiffErrors,
+  GithubDiffResponses,
   GithubPullRequestsCreateErrors,
   GithubPullRequestsCreateResponses,
+  GithubPullRequestsGenerateMessageErrors,
+  GithubPullRequestsGenerateMessageResponses,
   GithubPullRequestsGetErrors,
   GithubPullRequestsGetResponses,
   GithubPushErrors,
@@ -2522,6 +2526,60 @@ export class PullRequests extends HeyApiClient {
       },
     })
   }
+
+  /**
+   * Generate PR message
+   *
+   * Generate a PR title and body based on git diffs using an AI model.
+   */
+  public generateMessage<ThrowOnError extends boolean = false>(
+    parameters?: {
+      query_directory?: string
+      body_directory?: string
+      baseBranch?: string
+      model?: {
+        providerID: string
+        modelID: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            {
+              in: "query",
+              key: "query_directory",
+              map: "directory",
+            },
+            {
+              in: "body",
+              key: "body_directory",
+              map: "directory",
+            },
+            { in: "body", key: "baseBranch" },
+            { in: "body", key: "model" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      GithubPullRequestsGenerateMessageResponses,
+      GithubPullRequestsGenerateMessageErrors,
+      ThrowOnError
+    >({
+      url: "/github/pull-requests/generate-message",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
 }
 
 export class Github2 extends HeyApiClient {
@@ -2607,6 +2665,38 @@ export class Github2 extends HeyApiClient {
         ...options?.headers,
         ...params.headers,
       },
+    })
+  }
+
+  /**
+   * Get git diff
+   *
+   * Get git diff between current branch and base branch.
+   */
+  public diff<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory: string
+      base: string
+      head?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "base" },
+            { in: "query", key: "head" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<GithubDiffResponses, GithubDiffErrors, ThrowOnError>({
+      url: "/github/diff",
+      ...options,
+      ...params,
     })
   }
 
