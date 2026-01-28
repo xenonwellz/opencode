@@ -141,38 +141,45 @@ export async function listRepositories(
   provider: Provider,
   installationId: number,
   query?: string,
-  page = 1,
-  perPage = 30,
+  _page = 1,
+  _perPage = 100,
 ): Promise<Repository[]> {
   const octokit = createOctokit(provider, installationId)
-  let repos: any[] = []
+
+  const allRepos = await octokit.paginate(
+    octokit.rest.apps.listReposAccessibleToInstallation,
+    {
+      per_page: 100,
+    },
+    (response: any) => response.data.repositories
+  )
+
+  let repos = allRepos.map((r: any) => ({
+    id: r.id,
+    name: r.name,
+    full_name: r.full_name,
+    description: r.description,
+    private: r.private,
+    default_branch: r.default_branch,
+    updated_at: r.updated_at,
+  }))
+
+  repos.sort((a: Repository, b: Repository) => {
+    const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0
+    const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0
+    return dateB - dateA
+  })
 
   if (query) {
-    const response = await octokit.rest.search.repos({
-      q: `${query} in:name is:public,private fork:true`,
-      sort: "updated",
-      order: "desc",
-      per_page: perPage,
-      page,
-    })
-    repos = response.data.items
-  } else {
-    const response = await octokit.rest.apps.listReposAccessibleToInstallation({
-      per_page: perPage,
-      page,
-    })
-    repos = (response.data as any).repositories
+    const q = query.toLowerCase()
+    repos = repos.filter(
+      (repo: Repository) =>
+        repo.name.toLowerCase().includes(q) ||
+        repo.full_name.toLowerCase().includes(q)
+    )
   }
 
-  return repos.map((repo) => ({
-    id: repo.id,
-    name: repo.name,
-    full_name: repo.full_name,
-    description: repo.description,
-    private: repo.private,
-    default_branch: repo.default_branch,
-    updated_at: repo.updated_at,
-  }))
+  return repos.slice(0, 1000)
 }
 
 export async function listBranches(
@@ -182,13 +189,28 @@ export async function listBranches(
   repo: string,
 ): Promise<Branch[]> {
   const octokit = createOctokit(provider, installationId)
-  const response = await octokit.repos.listBranches({
+
+  const { data: repoData } = await octokit.rest.repos.get({ owner, repo })
+  const defaultBranch = repoData.default_branch
+
+  const branches = await octokit.paginate(octokit.rest.repos.listBranches, {
     owner,
     repo,
     per_page: 100,
   })
-  return response.data.map((branch) => ({
+
+  const mappedBranches = branches.map((branch: any) => ({
     name: branch.name,
     protected: branch.protected,
   }))
+
+  return mappedBranches
+    .sort((a, b) => {
+      if (a.name === defaultBranch) return -1
+      if (b.name === defaultBranch) return 1
+      if (a.protected && !b.protected) return -1
+      if (!a.protected && b.protected) return 1
+      return a.name.localeCompare(b.name)
+    })
+    .slice(0, 1000)
 }
