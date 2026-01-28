@@ -164,7 +164,6 @@ export const dict = {
   "common.attachment": "attachment",
   "common.back": "Back",
   "common.open": "Open",
-  "common.add": "Add",
 
   "prompt.placeholder.shell": "Enter shell command...",
   "prompt.placeholder.normal": 'Ask anything... "{{example}}"',
@@ -271,75 +270,31 @@ export const dict = {
 
   "dialog.project.provider.local.name": "Local",
   "dialog.project.provider.local.description": "Open a local directory",
-  "dialog.project.provider.github.description": "GitHub ({{type}})",
-  "dialog.project.provider.github_app.description": "GitHub App ({{account}})",
   "dialog.project.provider.add.name": "Add provider",
   "dialog.project.provider.add.description": "Connect a new provider",
-  "dialog.project.provider.github_app_setup.name": "Setup GitHub App",
-  "dialog.project.provider.github_app_setup.description": "Create a GitHub App for enhanced access",
-  "dialog.project.provider.github_app_install.name": "Install GitHub App",
-  "dialog.project.provider.github_app_install.description": "Add access to more repositories",
   "dialog.project.provider.delete.confirm": "Are you sure you want to delete this provider?",
   "dialog.project.provider.delete.success.title": "Provider deleted successfully",
   "dialog.project.provider.delete.error.title": "Failed to delete provider",
-  "dialog.project.delete.title": "Delete provider",
-  "dialog.project.delete.description":
-    'Are you sure you want to delete "{{name}}"? This will remove the GitHub access token from your machine.',
-  "dialog.project.delete.success.title": "Provider deleted",
-  "dialog.project.delete.success.description": '"{{name}}" has been removed.',
-  "dialog.project.delete.error.title": "Failed to delete provider",
   "dialog.project.open.title": "Open project",
   "dialog.project.open.description": "Choose how to open your project",
   "dialog.project.search.placeholder": "Search providers",
   "dialog.project.empty": "No providers available",
-  "dialog.project.select_provider.title": "Select provider",
-  "dialog.project.select_provider.description": "Choose a provider to connect",
   "dialog.project.add_github.title": "Add GitHub key",
   "dialog.project.add_github.description":
     "Enter a name for this key and your GitHub personal access token. The token will be stored securely on your machine.",
-  "dialog.project.add_github.error.name_required": "Name is required",
-  "dialog.project.add_github.error.token_required": "Token is required",
-  "dialog.project.add_github.error.invalid_token":
-    "There was an error with the provided token, this token may no longer be valid",
-  "dialog.project.add_github.success.title": "GitHub key added",
-  "dialog.project.add_github.success.description": "You can now use this key to access your GitHub repositories.",
-  "dialog.project.add_github.create_token": "Create a token on GitHub",
-  "dialog.project.add_github.token_instruction":
-    "For classic tokens, use the repo scope. For fine-grained tokens, grant repository access.",
-  "dialog.project.add_github.name.label": "Name",
-  "dialog.project.add_github.name.placeholder": "My GitHub Token",
-  "dialog.project.add_github.token.label": "Personal Access Token",
-  "dialog.project.add_github.token.placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
   "dialog.project.add_github.button.create": "Create GitHub App",
   "dialog.project.add_github.button.creating": "Creating...",
   "dialog.project.add_github.app_instruction":
     "Create a GitHub App to access repositories. This will redirect you to GitHub to set up the app.",
   "dialog.project.add_github.organization.label": "Organization (optional)",
   "dialog.project.add_github.organization.placeholder": "Leave empty for personal",
-  "dialog.project.add_github.organization.description":
-    "Enter your organization name to create the app under an organization. Leave empty to create a personal app.",
-  "dialog.project.github_app.setup.title": "Setup GitHub App",
-  "dialog.project.github_app.setup.description":
-    "Create a GitHub App to access repositories without personal access tokens. This provides better security and organization-level access.",
-  "dialog.project.github_app.setup.organization.label": "Organization (optional)",
-  "dialog.project.github_app.setup.organization.placeholder": "Leave empty for personal",
-  "dialog.project.github_app.setup.organization.description":
-    "Enter your organization name to create the app under an organization.",
-  "dialog.project.github_app.setup.button": "Create GitHub App",
-  "dialog.project.github_app.setup.button.loading": "Creating...",
   "dialog.project.github_app.install.title": "Install GitHub App",
   "dialog.project.github_app.install.description":
     "Install the GitHub App on your account or organization to grant access to repositories.",
   "dialog.project.github_app.install.instruction":
     "Click the button below to install {{name}} on your GitHub account and grant access to repositories.",
   "dialog.project.github_app.install.button": "Install on GitHub",
-  "dialog.project.github_app.manage.title": "Manage GitHub App",
   "dialog.project.github_app.manage.installations": "Installations",
-  "dialog.project.github_app.manage.no_installations":
-    "No installations found. Install the app to access repositories.",
-  "dialog.project.github_app.manage.add_installation": "Create New",
-  "dialog.project.github_app.manage.remove_app": "Remove GitHub App",
-  "dialog.project.github_app.installation.added": "Installation added successfully",
   "dialog.project.select_repo.title": "Select repository",
   "dialog.project.select_repo.description": "Connected with {{name}}",
   "dialog.project.select_repo.search.placeholder": "Search repositories",
@@ -354,7 +309,6 @@ export const dict = {
   "dialog.project.clone.branch": "Branch: {{branch}}",
   "dialog.project.clone.moments": "This may take a few moments",
   "dialog.project.clone.success.title": "Repository cloned",
-  "dialog.project.clone.success.description": "Successfully cloned {{name}}",
   "dialog.project.clone.success.description_with_branch": "Cloned {{name}} to {{branch}}",
   "dialog.project.clone.error.title": "Failed to clone repository",
   "dialog.project.select_branch.title": "Select branch",
@@ -510,7 +464,6 @@ export const dict = {
   "session.messages.loadingEarlier": "Loading earlier messages...",
   "session.messages.loadEarlier": "Load earlier messages",
   "session.messages.loading": "Loading messages...",
-  "session.messages.jumpToLatest": "Jump to latest",
 
   "session.context.addToContext": "Add {{selection}} to context",
 
@@ -572,7 +525,6 @@ export const dict = {
   "sidebar.gettingStarted.line1": "OpenCode includes free models so you can start immediately.",
   "sidebar.gettingStarted.line2": "Connect any provider to use models, inc. Claude, GPT, Gemini etc.",
   "sidebar.project.recentSessions": "Recent sessions",
-  "sidebar.project.viewAllSessions": "View all sessions",
 
   "settings.section.desktop": "Desktop",
   "settings.tab.general": "General",
