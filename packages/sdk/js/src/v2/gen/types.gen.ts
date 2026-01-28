@@ -1993,13 +1993,6 @@ export type ProviderAuthAuthorization = {
   instructions: string
 }
 
-export type GithubKey = {
-  name: string
-  token: string
-  type: "classic" | "fine-grained"
-  createdAt: number
-}
-
 export type Symbol = {
   name: string
   kind: number
@@ -2286,6 +2279,314 @@ export type ProjectUpdateResponses = {
 }
 
 export type ProjectUpdateResponse = ProjectUpdateResponses[keyof ProjectUpdateResponses]
+
+export type ProjectProvidersGithubListData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/project/providers"
+}
+
+export type ProjectProvidersGithubListResponses = {
+  /**
+   * List of GitHub providers
+   */
+  200: Array<{
+    id: string
+    type: "github"
+    configured: true
+    appId: number
+    slug: string
+    clientId: string
+  }>
+}
+
+export type ProjectProvidersGithubListResponse =
+  ProjectProvidersGithubListResponses[keyof ProjectProvidersGithubListResponses]
+
+export type ProjectProvidersGithubCreateData = {
+  body?: {
+    organization?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/project/providers"
+}
+
+export type ProjectProvidersGithubCreateErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type ProjectProvidersGithubCreateError =
+  ProjectProvidersGithubCreateErrors[keyof ProjectProvidersGithubCreateErrors]
+
+export type ProjectProvidersGithubCreateResponses = {
+  /**
+   * Provider creation manifest
+   */
+  200: {
+    manifest: unknown
+    providerId: string
+    organization?: string
+  }
+}
+
+export type ProjectProvidersGithubCreateResponse =
+  ProjectProvidersGithubCreateResponses[keyof ProjectProvidersGithubCreateResponses]
+
+export type ProjectProvidersGithubManifestData = {
+  body?: never
+  path: {
+    providerId: string
+  }
+  query?: {
+    directory?: string
+  }
+  url: "/project/providers/{providerId}/manifest"
+}
+
+export type ProjectProvidersGithubManifestErrors = {
+  /**
+   * Not found
+   */
+  404: NotFoundError
+}
+
+export type ProjectProvidersGithubManifestError =
+  ProjectProvidersGithubManifestErrors[keyof ProjectProvidersGithubManifestErrors]
+
+export type ProjectProvidersGithubManifestResponses = {
+  /**
+   * Provider creation manifest
+   */
+  200: {
+    manifest: unknown
+    providerId: string
+  }
+}
+
+export type ProjectProvidersGithubManifestResponse =
+  ProjectProvidersGithubManifestResponses[keyof ProjectProvidersGithubManifestResponses]
+
+export type ProjectProvidersGithubCallbackData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    code: string
+    state: string
+  }
+  url: "/project/providers/callback"
+}
+
+export type ProjectProvidersGithubDeleteData = {
+  body?: never
+  path: {
+    providerId: string
+  }
+  query?: {
+    directory?: string
+  }
+  url: "/project/providers/{providerId}"
+}
+
+export type ProjectProvidersGithubDeleteErrors = {
+  /**
+   * Not found
+   */
+  404: NotFoundError
+}
+
+export type ProjectProvidersGithubDeleteError =
+  ProjectProvidersGithubDeleteErrors[keyof ProjectProvidersGithubDeleteErrors]
+
+export type ProjectProvidersGithubDeleteResponses = {
+  /**
+   * Deletion result
+   */
+  200: boolean
+}
+
+export type ProjectProvidersGithubDeleteResponse =
+  ProjectProvidersGithubDeleteResponses[keyof ProjectProvidersGithubDeleteResponses]
+
+export type ProjectProvidersGithubInstallationsListData = {
+  body?: never
+  path: {
+    providerId: string
+  }
+  query?: {
+    directory?: string
+  }
+  url: "/project/providers/{providerId}/installations"
+}
+
+export type ProjectProvidersGithubInstallationsListErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * Not found
+   */
+  404: NotFoundError
+}
+
+export type ProjectProvidersGithubInstallationsListError =
+  ProjectProvidersGithubInstallationsListErrors[keyof ProjectProvidersGithubInstallationsListErrors]
+
+export type ProjectProvidersGithubInstallationsListResponses = {
+  /**
+   * List of installations
+   */
+  200: Array<{
+    id: number
+    account?: {
+      login: string
+      avatar_url?: string
+      name?: string
+    }
+  }>
+}
+
+export type ProjectProvidersGithubInstallationsListResponse =
+  ProjectProvidersGithubInstallationsListResponses[keyof ProjectProvidersGithubInstallationsListResponses]
+
+export type ProjectProvidersGithubReposListData = {
+  body?: never
+  path: {
+    providerId: string
+  }
+  query: {
+    directory?: string
+    installationId: number
+    query?: string
+    page?: number
+    perPage?: number
+  }
+  url: "/project/providers/{providerId}/repos"
+}
+
+export type ProjectProvidersGithubReposListErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * Not found
+   */
+  404: NotFoundError
+}
+
+export type ProjectProvidersGithubReposListError =
+  ProjectProvidersGithubReposListErrors[keyof ProjectProvidersGithubReposListErrors]
+
+export type ProjectProvidersGithubReposListResponses = {
+  /**
+   * List of repositories
+   */
+  200: Array<{
+    id: number
+    name: string
+    full_name: string
+    description: string | null
+    private: boolean
+    default_branch: string
+    updated_at: string | null
+  }>
+}
+
+export type ProjectProvidersGithubReposListResponse =
+  ProjectProvidersGithubReposListResponses[keyof ProjectProvidersGithubReposListResponses]
+
+export type ProjectProvidersGithubReposBranchesData = {
+  body?: never
+  path: {
+    providerId: string
+    owner: string
+    repo: string
+  }
+  query: {
+    directory?: string
+    installationId: number
+  }
+  url: "/project/providers/{providerId}/repos/{owner}/{repo}/branches"
+}
+
+export type ProjectProvidersGithubReposBranchesErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * Not found
+   */
+  404: NotFoundError
+}
+
+export type ProjectProvidersGithubReposBranchesError =
+  ProjectProvidersGithubReposBranchesErrors[keyof ProjectProvidersGithubReposBranchesErrors]
+
+export type ProjectProvidersGithubReposBranchesResponses = {
+  /**
+   * List of branches
+   */
+  200: Array<{
+    name: string
+    protected: boolean
+  }>
+}
+
+export type ProjectProvidersGithubReposBranchesResponse =
+  ProjectProvidersGithubReposBranchesResponses[keyof ProjectProvidersGithubReposBranchesResponses]
+
+export type ProjectProvidersGithubCloneData = {
+  body?: {
+    providerId: string
+    installationId: number
+    owner: string
+    repo: string
+    branch?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/project/providers/clone"
+}
+
+export type ProjectProvidersGithubCloneErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * Not found
+   */
+  404: NotFoundError
+}
+
+export type ProjectProvidersGithubCloneError =
+  ProjectProvidersGithubCloneErrors[keyof ProjectProvidersGithubCloneErrors]
+
+export type ProjectProvidersGithubCloneResponses = {
+  /**
+   * Clone result
+   */
+  200: {
+    path: string
+  }
+}
+
+export type ProjectProvidersGithubCloneResponse =
+  ProjectProvidersGithubCloneResponses[keyof ProjectProvidersGithubCloneResponses]
 
 export type PtyListData = {
   body?: never
@@ -4005,197 +4306,6 @@ export type ProviderOauthCallbackResponses = {
 
 export type ProviderOauthCallbackResponse = ProviderOauthCallbackResponses[keyof ProviderOauthCallbackResponses]
 
-export type GithubKeysListData = {
-  body?: never
-  path?: never
-  query?: {
-    directory?: string
-  }
-  url: "/github/keys"
-}
-
-export type GithubKeysListResponses = {
-  /**
-   * List of GitHub keys
-   */
-  200: Array<{
-    id: string
-    name: string
-    type: "classic" | "fine-grained"
-    createdAt: number
-  }>
-}
-
-export type GithubKeysListResponse = GithubKeysListResponses[keyof GithubKeysListResponses]
-
-export type GithubKeysCreateData = {
-  body?: {
-    name: string
-    token: string
-  }
-  path?: never
-  query?: {
-    directory?: string
-  }
-  url: "/github/keys"
-}
-
-export type GithubKeysCreateErrors = {
-  /**
-   * Bad request
-   */
-  400: BadRequestError
-}
-
-export type GithubKeysCreateError = GithubKeysCreateErrors[keyof GithubKeysCreateErrors]
-
-export type GithubKeysCreateResponses = {
-  /**
-   * Created key
-   */
-  200: GithubKey
-}
-
-export type GithubKeysCreateResponse = GithubKeysCreateResponses[keyof GithubKeysCreateResponses]
-
-export type GithubKeysDeleteData = {
-  body?: never
-  path: {
-    keyID: string
-  }
-  query?: {
-    directory?: string
-  }
-  url: "/github/keys/{keyID}"
-}
-
-export type GithubKeysDeleteErrors = {
-  /**
-   * Bad request
-   */
-  400: BadRequestError
-}
-
-export type GithubKeysDeleteError = GithubKeysDeleteErrors[keyof GithubKeysDeleteErrors]
-
-export type GithubKeysDeleteResponses = {
-  /**
-   * Key deleted
-   */
-  200: boolean
-}
-
-export type GithubKeysDeleteResponse = GithubKeysDeleteResponses[keyof GithubKeysDeleteResponses]
-
-export type GithubReposListData = {
-  body?: never
-  path?: never
-  query: {
-    directory?: string
-    keyID: string
-    query?: string
-    page?: number
-    perPage?: number
-  }
-  url: "/github/repos"
-}
-
-export type GithubReposListErrors = {
-  /**
-   * Bad request
-   */
-  400: BadRequestError
-}
-
-export type GithubReposListError = GithubReposListErrors[keyof GithubReposListErrors]
-
-export type GithubReposListResponses = {
-  /**
-   * List of repositories
-   */
-  200: Array<{
-    id: number
-    name: string
-    full_name: string
-    description: string | null
-    private: boolean
-    default_branch: string
-    updated_at: string | null
-  }>
-}
-
-export type GithubReposListResponse = GithubReposListResponses[keyof GithubReposListResponses]
-
-export type GithubReposBranchesData = {
-  body?: never
-  path: {
-    owner: string
-    repo: string
-  }
-  query: {
-    directory?: string
-    keyID: string
-    query?: string
-    perPage?: number
-  }
-  url: "/github/repos/{owner}/{repo}/branches"
-}
-
-export type GithubReposBranchesErrors = {
-  /**
-   * Bad request
-   */
-  400: BadRequestError
-}
-
-export type GithubReposBranchesError = GithubReposBranchesErrors[keyof GithubReposBranchesErrors]
-
-export type GithubReposBranchesResponses = {
-  /**
-   * List of branches
-   */
-  200: Array<{
-    name: string
-    protected: boolean
-  }>
-}
-
-export type GithubReposBranchesResponse = GithubReposBranchesResponses[keyof GithubReposBranchesResponses]
-
-export type GithubCloneData = {
-  body?: {
-    keyID: string
-    owner: string
-    repo: string
-    branch?: string
-  }
-  path?: never
-  query?: {
-    directory?: string
-  }
-  url: "/github/clone"
-}
-
-export type GithubCloneErrors = {
-  /**
-   * Bad request
-   */
-  400: BadRequestError
-}
-
-export type GithubCloneError = GithubCloneErrors[keyof GithubCloneErrors]
-
-export type GithubCloneResponses = {
-  /**
-   * Clone result
-   */
-  200: {
-    path: string
-  }
-}
-
-export type GithubCloneResponse = GithubCloneResponses[keyof GithubCloneResponses]
-
 export type GithubRemoteInfoData = {
   body?: never
   path?: never
@@ -4261,7 +4371,6 @@ export type GithubStatusResponse = GithubStatusResponses[keyof GithubStatusRespo
 
 export type GithubPushData = {
   body?: {
-    keyID: string
     directory: string
     message?: string
     branchName?: string
@@ -4300,7 +4409,6 @@ export type GithubPullRequestsGetData = {
   path?: never
   query: {
     directory: string
-    keyID: string
     headBranch?: string
   }
   url: "/github/pull-requests"
@@ -4331,7 +4439,6 @@ export type GithubPullRequestsGetResponse = GithubPullRequestsGetResponses[keyof
 
 export type GithubPullRequestsCreateData = {
   body?: {
-    keyID: string
     directory: string
     title: string
     body?: string
@@ -4367,6 +4474,74 @@ export type GithubPullRequestsCreateResponses = {
 
 export type GithubPullRequestsCreateResponse =
   GithubPullRequestsCreateResponses[keyof GithubPullRequestsCreateResponses]
+
+export type GithubDiffData = {
+  body?: never
+  path?: never
+  query: {
+    directory: string
+    base: string
+    head?: string
+  }
+  url: "/github/diff"
+}
+
+export type GithubDiffErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubDiffError = GithubDiffErrors[keyof GithubDiffErrors]
+
+export type GithubDiffResponses = {
+  /**
+   * Git diff
+   */
+  200: string
+}
+
+export type GithubDiffResponse = GithubDiffResponses[keyof GithubDiffResponses]
+
+export type GithubPullRequestsGenerateMessageData = {
+  body?: {
+    directory: string
+    baseBranch: string
+    model: {
+      providerID: string
+      modelID: string
+    }
+  }
+  path?: never
+  query?: {
+    directory?: string
+  }
+  url: "/github/pull-requests/generate-message"
+}
+
+export type GithubPullRequestsGenerateMessageErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type GithubPullRequestsGenerateMessageError =
+  GithubPullRequestsGenerateMessageErrors[keyof GithubPullRequestsGenerateMessageErrors]
+
+export type GithubPullRequestsGenerateMessageResponses = {
+  /**
+   * Generated message
+   */
+  200: {
+    title: string
+    body: string
+  }
+}
+
+export type GithubPullRequestsGenerateMessageResponse =
+  GithubPullRequestsGenerateMessageResponses[keyof GithubPullRequestsGenerateMessageResponses]
 
 export type FindTextData = {
   body?: never
