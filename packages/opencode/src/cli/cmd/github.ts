@@ -551,17 +551,14 @@ export const GithubRunCommand = cmd({
           const { dirty, uncommittedChanges } = await branchIsDirty(head)
           if (dirty) {
             const summary = await summarize(response)
+            // workflow_dispatch has an actor for co-author attribution, schedule does not
             await pushToNewBranch(summary, branch, uncommittedChanges, isScheduleEvent)
             const triggerType = isWorkflowDispatchEvent ? "workflow_dispatch" : "scheduled workflow"
-            const prBody = await generatePRDescriptionFromDiff(
-              await getDiffFromOrigin(repoData.data.default_branch),
-              repoData.data.default_branch,
-            )
             const pr = await createPR(
               repoData.data.default_branch,
               branch,
               summary,
-              `${prBody}\n\nTriggered by ${triggerType}${footer({ image: true })}`,
+              `${response}\n\nTriggered by ${triggerType}${footer({ image: true })}`,
             )
             console.log(`Created PR #${pr}`)
           } else {
@@ -614,15 +611,11 @@ export const GithubRunCommand = cmd({
           if (dirty) {
             const summary = await summarize(response)
             await pushToNewBranch(summary, branch, uncommittedChanges, false)
-            const prBody = await generatePRDescriptionFromDiff(
-              await getDiffFromOrigin(repoData.data.default_branch),
-              repoData.data.default_branch,
-            )
             const pr = await createPR(
               repoData.data.default_branch,
               branch,
               summary,
-              `${prBody}\n\nCloses #${issueId}${footer({ image: true })}`,
+              `${response}\n\nCloses #${issueId}${footer({ image: true })}`,
             )
             await createComment(`Created PR #${pr}${footer({ image: true })}`)
             await removeReaction(commentType)
@@ -882,24 +875,6 @@ export const GithubRunCommand = cmd({
             : (payload as PullRequestReviewCommentEvent).pull_request.title
           return `Fix issue: ${title}`
         }
-      }
-
-      async function getDiffFromOrigin(baseBranch: string) {
-        console.log("Getting diff from origin/" + baseBranch + "...")
-        const diff = await $`git diff origin/${baseBranch}...HEAD`.cwd(Instance.worktree).quiet().nothrow().text()
-        return diff
-      }
-
-      async function generatePRDescriptionFromDiff(diff: string, baseBranch: string) {
-        if (!diff.trim()) {
-          return "No changes detected"
-        }
-
-        console.log("Generating PR description from diff...")
-        const description = await chat(
-          `Generate a pull request description based on the following git diff from origin/${baseBranch} to current branch. Provide a clear summary of what changes were made, why, and any important implementation details. Format as markdown:\n\n## Summary\n\n[Clear description of changes]\n\n## Changes Made\n\n- [List of key changes]\n\n## Testing\n\n[How these changes were tested]\n\nDiff:\n\`\`\`\n${diff.slice(0, 8000)}\n\`\`\`${diff.length > 8000 ? "\n\n[Diff truncated]" : ""}`,
-        )
-        return description
       }
 
       async function chat(message: string, files: PromptFiles = []) {
